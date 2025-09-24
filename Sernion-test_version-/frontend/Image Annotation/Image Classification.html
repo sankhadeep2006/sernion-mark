@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Image Classification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .confidence-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: #e5e7eb;
+      outline: none;
+      width: 100%;
+    }
+    .confidence-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #2563eb;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .confidence-track {
+      background: linear-gradient(to right, #2563eb 0%, #2563eb var(--progress), #e5e7eb var(--progress), #e5e7eb 100%);
+    }
+    .drawing-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: auto;
+      cursor: crosshair;
+      z-index: 25;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 font-sans text-gray-900 overflow-hidden">
+  
+  <!-- Header -->
+  <header class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
+    <div class="flex items-center gap-3">
+      <svg class="w-5 h-5" viewBox="0 0 24 24">
+        <path fill="#2563eb" d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+        <circle cx="8" cy="8" r="2.25" fill="#fff"/>
+        <path fill="#93c5fd" d="M3 18l6-6 3 3 3-4 6 7v1H3z"/>
+      </svg>
+      <div>
+        <h1 id="fileName" class="text-sm font-bold">Image.png</h1>
+        <div class="text-xs text-gray-500">Image Classification</div>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+        <a href="/frontend/Datasets.html" onclick="window.history.back()">← Back to project</a>
+      </button>
+      <button id="exportBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800">💾 Export</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="grid grid-cols-1 xl:grid-cols-4 gap-4 p-4 h-screen">
+    
+    <!-- Left Section -->
+    <section class="xl:col-span-3 bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center">
+      
+      <!-- Upload Area -->
+      <div id="card" class="border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 w-full max-w-4xl h-80 md:h-96 lg:h-[460px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-blue-600 hover:bg-blue-50">
+        <div id="stack" class="flex flex-col gap-3 items-center w-full h-full">
+          <div id="hint" class="text-gray-500 text-center p-5 text-base font-medium">Click to select, or drop an image</div>
+        </div>
+        <input id="file" type="file" accept="image/*" class="absolute w-px h-px opacity-0 pointer-events-none" />
+      </div>
+
+      <!-- Controls -->
+      <div class="flex flex-wrap gap-3 justify-center mt-4">
+        <button id="drawBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors">✏️ Draw</button>
+        <button id="clearBtn" class="bg-red-50 text-red-800 px-4 py-2 rounded-lg font-bold hover:bg-red-100 transition-colors">🗑️ Clear</button>
+        <button id="undoBtn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-bold hover:bg-gray-300 transition-colors opacity-50 cursor-not-allowed" disabled>↶ Undo</button>
+      </div>
+
+    </section>
+
+    <!-- Right Sidebar -->
+    <aside class="bg-white border border-gray-200 rounded-xl p-4 overflow-y-auto">
+      
+      <!-- Drawing Tools -->
+      <div class="mb-1">
+        <h3 class="text-lg font-bold mb-3">Drawing Tools</h3>
+        <div class="space-y-3">
+          
+          <!-- Brush Size Control -->
+          <div class="border border-gray-200 rounded-lg bg-white p-3 shadow-sm">
+            <div class="mb-2">
+              <span class="text-sm font-medium text-gray-700">Brush Size: <span id="brushSizeValue">3</span>px</span>
+            </div>
+            <input type="range" id="brushSizeSlider" min="1" max="20" value="3" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>1px</span>
+              <span>20px</span>
+            </div>
+          </div>
+          
+          <!-- Color Palette -->
+          <div class="border border-gray-200 rounded-lg bg-white p-3 shadow-sm">
+            <label class="block text-sm font-semibold mb-2">Drawing Colors</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #ef4444" data-color="#ef4444" title="Red"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #3b82f6" data-color="#3b82f6" title="Blue"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #10b981" data-color="#10b981" title="Green"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #f59e0b" data-color="#f59e0b" title="Yellow"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #8b5cf6" data-color="#8b5cf6" title="Purple"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #ec4899" data-color="#ec4899" title="Pink"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #000000" data-color="#000000" title="Black"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #ffffff" data-color="#ffffff" title="White"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detection Categories -->
+      <div class="mb-6">
+        <h3 class="text-lg font-bold mb-3">Detection Categories</h3>
+        <div class="space-y-2">
+          <label class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+            <input type="checkbox" id="nature" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+            <span class="text-sm font-medium text-gray-700">Nature</span>
+          </label>
+          <label class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+            <input type="checkbox" id="urban" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+            <span class="text-sm font-medium text-gray-700">Urban</span>
+          </label>
+          <label class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+            <input type="checkbox" id="peoples" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+            <span class="text-sm font-medium text-gray-700">People</span>
+          </label>
+          <label class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+            <input type="checkbox" id="animals" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+            <span class="text-sm font-medium text-gray-700">Animals</span>
+          </label>
+          <label class="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+            <input type="checkbox" id="vehicles" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+            <span class="text-sm font-medium text-gray-700">Vehicles</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Confidence Level -->
+      <div class="mb-6">
+        <h3 class="text-lg font-bold mb-3">Confidence Level</h3>
+        <div class="px-2">
+          <div class="mb-3">
+            <span class="text-sm font-medium text-gray-700">Confidence: <span id="confidenceValue">50</span>%</span>
+          </div>
+          <div class="relative">
+            <input type="range" id="confidenceSlider" min="0" max="100" value="50" class="confidence-slider confidence-track w-full" style="--progress: 50%">
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>0%</span>
+              <span>100%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </aside>
+  </main>
+
+<script>
+// Application State
+let activeImage = null;
+let drawingMode = false;
+let isDrawing = false;
+
+// Drawing state
+let drawingCanvas = null;
+let drawingCtx = null;
+let currentBrushSize = 3;
+let currentColor = '#3b82f6';
+
+// Classification state
+let confidenceLevel = 50;
+let selectedCategories = [];
+
+// Data storage
+let drawingHistory = [];
+
+// Get DOM elements
+const card = document.getElementById('card');
+const stack = document.getElementById('stack');
+const fileInput = document.getElementById('file');
+const hint = document.getElementById('hint');
+const fileInfo = document.getElementById('fileInfo');
+const fileName = document.getElementById('fileName');
+const urlInput = document.getElementById('urlInput');
+
+const drawBtn = document.getElementById('drawBtn');
+const clearBtn = document.getElementById('clearBtn');
+const undoBtn = document.getElementById('undoBtn');
+const exportBtn = document.getElementById('exportBtn');
+
+const brushSizeSlider = document.getElementById('brushSizeSlider');
+const brushSizeValue = document.getElementById('brushSizeValue');
+const confidenceSlider = document.getElementById('confidenceSlider');
+const confidenceValue = document.getElementById('confidenceValue');
+
+// Initialize color buttons
+document.querySelectorAll('.color-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('ring-4', 'ring-blue-500'));
+    btn.classList.add('ring-4', 'ring-blue-500');
+    currentColor = btn.dataset.color;
+    if (drawingCtx) {
+      drawingCtx.strokeStyle = currentColor;
+    }
+  });
+});
+
+// Set default color
+document.querySelector('.color-btn[data-color="#3b82f6"]').classList.add('ring-4', 'ring-blue-500');
+
+// Brush size controls
+brushSizeSlider.addEventListener('input', () => {
+  currentBrushSize = parseInt(brushSizeSlider.value);
+  brushSizeValue.textContent = currentBrushSize;
+  if (drawingCtx) {
+    drawingCtx.lineWidth = currentBrushSize;
+  }
+});
+
+// Confidence level controls
+confidenceSlider.addEventListener('input', (e) => {
+  confidenceLevel = parseInt(e.target.value);
+  confidenceValue.textContent = confidenceLevel;
+  const progress = (confidenceLevel / 100) * 100;
+  e.target.style.setProperty('--progress', `${progress}%`);
+});
+
+// Category selection
+const categoryCheckboxes = ['nature', 'urban', 'peoples', 'animals', 'vehicles'];
+categoryCheckboxes.forEach(id => {
+  const checkbox = document.getElementById(id);
+  checkbox.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      selectedCategories.push(id);
+    } else {
+      selectedCategories = selectedCategories.filter(cat => cat !== id);
+    }
+  });
+});
+
+// Drawing functions
+function createDrawingCanvas(container) {
+  const existingCanvas = container.querySelector('.drawing-canvas');
+  if (existingCanvas) {
+    existingCanvas.remove();
+  }
+  
+  const canvas = document.createElement('canvas');
+  canvas.className = 'drawing-canvas';
+  
+  const img = container.querySelector('img');
+  if (img) {
+    const rect = img.getBoundingClientRect();
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.style.width = img.offsetWidth + 'px';
+    canvas.style.height = img.offsetHeight + 'px';
+  }
+  
+  container.appendChild(canvas);
+  return canvas;
+}
+
+function getCanvasPosition(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY
+  };
+}
+
+function startDrawing(e) {
+  if (!drawingMode || !drawingCanvas) return;
+  
+  isDrawing = true;
+  const pos = getCanvasPosition(e, drawingCanvas);
+  
+  // Set drawing properties
+  drawingCtx.lineWidth = currentBrushSize;
+  drawingCtx.lineCap = 'round';
+  drawingCtx.lineJoin = 'round';
+  drawingCtx.globalCompositeOperation = 'source-over';
+  drawingCtx.strokeStyle = currentColor;
+  drawingCtx.globalAlpha = 0.8;
+  
+  drawingCtx.beginPath();
+  drawingCtx.moveTo(pos.x, pos.y);
+  
+  e.preventDefault();
+}
+
+function draw(e) {
+  if (!isDrawing || !drawingMode) return;
+  
+  const pos = getCanvasPosition(e, drawingCanvas);
+  drawingCtx.lineTo(pos.x, pos.y);
+  drawingCtx.stroke();
+  
+  e.preventDefault();
+}
+
+function stopDrawing(e) {
+  if (!isDrawing) return;
+  
+  isDrawing = false;
+  saveDrawingState();
+  e.preventDefault();
+}
+
+function saveDrawingState() {
+  if (drawingCanvas) {
+    drawingHistory.push(drawingCanvas.toDataURL());
+    if (drawingHistory.length > 50) {
+      drawingHistory.shift();
+    }
+  }
+  updateUndoButton();
+}
+
+// Button event handlers
+drawBtn.addEventListener('click', () => {
+  if (!activeImage) {
+    alert('Please upload an image first!');
+    return;
+  }
+  
+  drawingMode = !drawingMode;
+  
+  if (drawingMode) {
+    drawBtn.textContent = '⏸️ Stop Drawing';
+    drawBtn.className = 'bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 transition-colors';
+    
+    // Create drawing canvas
+    drawingCanvas = createDrawingCanvas(activeImage.container);
+    drawingCtx = drawingCanvas.getContext('2d');
+    
+    // Add drawing event listeners
+    drawingCanvas.addEventListener('mousedown', startDrawing);
+    drawingCanvas.addEventListener('mousemove', draw);
+    drawingCanvas.addEventListener('mouseup', stopDrawing);
+    drawingCanvas.addEventListener('mouseleave', stopDrawing);
+    
+    // Touch events for mobile
+    drawingCanvas.addEventListener('touchstart', startDrawing);
+    drawingCanvas.addEventListener('touchmove', draw);
+    drawingCanvas.addEventListener('touchend', stopDrawing);
+    
+    // Initialize drawing state
+    drawingHistory = [];
+    
+  } else {
+    drawBtn.textContent = '✏️ Draw';
+    drawBtn.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors';
+    
+    // Remove drawing canvas
+    if (drawingCanvas) {
+      drawingCanvas.remove();
+      drawingCanvas = null;
+      drawingCtx = null;
+    }
+    drawingHistory = [];
+    updateUndoButton();
+  }
+});
+
+clearBtn.addEventListener('click', () => {
+  if (!activeImage) {
+    alert('Please upload an image first!');
+    return;
+  }
+  
+  if (!drawingCanvas) {
+    alert('Please enable drawing mode first!');
+    return;
+  }
+  
+  if (confirm('Clear all drawings?')) {
+    drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+    drawingHistory = [];
+    updateUndoButton();
+  }
+});
+
+undoBtn.addEventListener('click', () => {
+  if (!activeImage) {
+    alert('Please upload an image first!');
+    return;
+  }
+  
+  if (!drawingCanvas) {
+    alert('Please enable drawing mode first!');
+    return;
+  }
+  
+  if (drawingHistory.length > 1) {
+    drawingHistory.pop();
+    const lastState = drawingHistory[drawingHistory.length - 1];
+    
+    if (lastState) {
+      const img = new Image();
+      img.onload = () => {
+        drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+        drawingCtx.drawImage(img, 0, 0);
+      };
+      img.src = lastState;
+    } else {
+      drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+    }
+  }
+  
+  updateUndoButton();
+});
+
+function updateUndoButton() {
+  const canUndo = drawingMode && drawingHistory.length > 1;
+  undoBtn.disabled = !canUndo;
+  undoBtn.classList.toggle('opacity-50', !canUndo);
+  undoBtn.classList.toggle('cursor-not-allowed', !canUndo);
+}
+
+// Export functionality
+exportBtn.addEventListener('click', () => {
+  if (!activeImage) {
+    alert('No image to export!');
+    return;
+  }
+  
+  const exportData = {
+    timestamp: new Date().toISOString(),
+    imageName: activeImage.name,
+    confidenceLevel: confidenceLevel,
+    selectedCategories: selectedCategories,
+    annotationData: drawingCanvas ? drawingCanvas.toDataURL() : null
+  };
+  
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `classification_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  alert('Classification data exported successfully!');
+});
+
+// Image upload functionality - Simplified Logic
+card.addEventListener('click', (e) => {
+  // Always allow image upload when clicking on the upload area
+  // unless we're actively drawing
+  if (drawingMode && drawingCanvas && e.target === drawingCanvas) {
+    return; // Allow drawing on canvas
+  }
+  
+  // For any other click, trigger file input
+  fileInput.click();
+});
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files && e.target.files.length) {
+    loadImageFile(e.target.files[0]);
+  }
+});
+
+// Drag & Drop
+['dragenter', 'dragover'].forEach(eventName => {
+  card.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    card.className = 'border-2 border-dashed border-blue-600 rounded-xl bg-blue-50 w-full max-w-4xl h-80 md:h-96 lg:h-[460px] flex items-center justify-center cursor-pointer transition-all duration-200';
+    if (hint) hint.textContent = 'Drop your image here';
+  });
+});
+
+card.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  card.className = 'border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 w-full max-w-4xl h-80 md:h-96 lg:h-[460px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-blue-600 hover:bg-blue-50';
+  if (hint) hint.textContent = 'Click to select, or drop an image';
+});
+
+card.addEventListener('drop', (e) => {
+  e.preventDefault();
+  card.className = 'border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 w-full max-w-4xl h-80 md:h-96 lg:h-[460px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-blue-600 hover:bg-blue-50';
+  if (e.dataTransfer.files && e.dataTransfer.files.length) {
+    loadImageFile(e.dataTransfer.files[0]);
+  }
+});
+
+function loadImageFile(file) {
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file');
+    return;
+  }
+  
+  if (hint) {
+    hint.textContent = 'Loading...';
+    hint.className = 'text-blue-600 text-center p-5 text-base font-semibold';
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (e) => createImageElement(e.target.result, file.name);
+  reader.onerror = () => {
+    if (hint) {
+      hint.textContent = 'Failed to load image';
+      hint.className = 'text-red-600 text-center p-5 text-base font-semibold';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function createImageElement(src, name) {
+  // Reset state
+  drawingMode = false;
+  drawingHistory = [];
+  
+  // Reset UI
+  drawBtn.textContent = '✏️ Draw';
+  drawBtn.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors';
+  updateUndoButton();
+  
+  // Remove hint
+  if (hint) hint.remove();
+  
+  // Clear existing content
+  stack.innerHTML = '';
+  
+  // Create container
+  const container = document.createElement('div');
+  container.className = 'relative flex items-center justify-center w-full h-full rounded-lg overflow-hidden';
+  
+  // Create image
+  const img = new Image();
+  img.onload = () => {
+    img.className = 'max-w-full max-h-full w-auto h-auto rounded-lg shadow-lg';
+    container.appendChild(img);
+    stack.appendChild(container);
+    
+    activeImage = { container, img, name, src };
+    fileName.textContent = name;
+    fileInfo.innerHTML = `Loaded: <b>${name}</b>`;
+  };
+  
+  img.onerror = () => {
+    stack.innerHTML = '<div class="text-red-600 text-center p-5 text-base font-semibold">Failed to load image</div>';
+  };
+  
+  img.src = src;
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+  updateUndoButton();
+});
+</script>
+
+</body>
+</html>

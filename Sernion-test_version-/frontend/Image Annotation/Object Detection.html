@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Object Detection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { 'custom-purple': '#5e0fe7' }
+        }
+      }
+    }
+  </script>
+  <style>
+    .bbox { 
+      position: absolute; 
+      border: 2px solid; 
+      cursor: move; 
+      background: rgba(0,0,0,0.1); 
+      z-index: 5;
+    }
+    .bbox:hover { 
+      box-shadow: 0 0 10px rgba(37,99,235,0.5); 
+    }
+    .bbox-label { 
+      position: absolute; 
+      top: -20px; 
+      left: 0; 
+      color: white;
+      padding: 2px 6px; 
+      font-size: 11px; 
+      border-radius: 3px; 
+    }
+    .drawing-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: auto;
+      cursor: crosshair;
+      z-index: 25;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 font-sans text-gray-900 overflow-hidden">
+  
+  <!-- Header -->
+  <header class="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
+    <div class="flex items-center gap-3">
+      <svg class="w-5 h-5" viewBox="0 0 24 24">
+        <path fill="#2563eb" d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+        <circle cx="8" cy="8" r="2.25" fill="#fff"/>
+        <path fill="#93c5fd" d="M3 18l6-6 3 3 3-4 6 7v1H3z"/>
+      </svg>
+      <div>
+        <h1 id="fileName" class="text-sm font-bold">Image.png</h1>
+        <div class="text-xs text-gray-500">Object Detection</div>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+        <a href="/frontend/Datasets.html" onclick="window.history.back()">← Back to project</a>
+      </button>
+      <button id="exportBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800">💾 Export</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="grid grid-cols-1 xl:grid-cols-4 gap-4 p-4 h-screen">
+    
+    <!-- Left Section -->
+    <section class="xl:col-span-3 bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center">
+      
+      <!-- Upload Area -->
+      <div id="card" class="border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 w-full max-w-4xl h-80 md:h-96 lg:h-[460px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-blue-600 hover:bg-blue-50">
+        <div id="stack" class="flex flex-col gap-3 items-center w-full h-full">
+          <div id="hint" class="text-gray-500 text-center p-5 text-base font-medium">Click to select, or drop an image</div>
+        </div>
+        <input id="file" type="file" accept="image/*" class="absolute w-px h-px opacity-0 pointer-events-none" />
+      </div>
+
+      <!-- Controls -->
+      <div class="flex flex-wrap gap-3 justify-center mt-4">
+        <button id="drawBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors">✏️ Draw</button>
+        <button id="clearBtn" class="bg-red-50 text-red-800 px-4 py-2 rounded-lg font-bold hover:bg-red-100 transition-colors">🗑️ Clear</button>
+        <button id="undoBtn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-bold hover:bg-gray-300 transition-colors opacity-50 cursor-not-allowed" disabled>↶ Undo</button>
+      </div>
+
+    </section>
+
+    <!-- Right Sidebar -->
+    <aside class="bg-white border border-gray-200 rounded-xl p-4 overflow-y-auto">
+      
+      <!-- Drawing Tools -->
+      <div class="mb-1">
+        <h3 class="text-lg font-bold mb-3">Drawing Tools</h3>
+        <div class="space-y-3">
+          
+          <!-- Brush Size Control -->
+          <div class="border border-gray-200 rounded-lg bg-white p-3 shadow-sm">
+            <div class="mb-2">
+              <span class="text-sm font-medium text-gray-700">Brush Size: <span id="brushSizeValue">5</span>px</span>
+            </div>
+            <input type="range" id="brushSizeSlider" min="1" max="20" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+            <div class="flex justify-between text-xs text-gray-500 mt-1">
+              <span>1px</span>
+              <span>20px</span>
+            </div>
+          </div>
+          
+          <!-- Color Palette -->
+          <div class="border border-gray-200 rounded-lg bg-white p-3 shadow-sm">
+            <label class="block text-sm font-semibold mb-2">Brush Color</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #ef4444" data-color="#ef4444" title="Red"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #3b82f6" data-color="#3b82f6" title="Blue"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #10b981" data-color="#10b981" title="Green"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #f59e0b" data-color="#f59e0b" title="Yellow"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #8b5cf6" data-color="#8b5cf6" title="Purple"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #ec4899" data-color="#ec4899" title="Pink"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #000000" data-color="#000000" title="Black"></button>
+              <button class="color-btn w-4 h-4 rounded-full border-2 border-gray-300 hover:scale-110 transition-transform" style="background-color: #ffffff" data-color="#ffffff" title="White"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Object Classes -->
+      <div class="mb-6">
+        <h3 class="text-lg font-bold mb-3">Object Classes</h3>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between border border-gray-200 rounded-lg bg-white p-2 shadow-sm hover:shadow-md transition-shadow">
+            <span class="font-bold text-sm text-red-500">Person</span>
+            <button class="object-btn border border-gray-300 rounded-md px-2 py-1 bg-white text-xs font-semibold" data-type="Person" data-color="#ef4444">Select</button>
+          </div>
+          <div class="flex items-center justify-between border border-gray-200 rounded-lg bg-white p-2 shadow-sm hover:shadow-md transition-shadow">
+            <span class="font-bold text-sm text-blue-600">Vehicle</span>
+            <button class="object-btn border border-gray-300 rounded-md px-2 py-1 bg-white text-xs font-semibold" data-type="Vehicle" data-color="#3b82f6">Select</button>
+          </div>
+          <div class="flex items-center justify-between border border-gray-200 rounded-lg bg-white p-2 shadow-sm hover:shadow-md transition-shadow">
+            <span class="font-bold text-sm text-green-600">Animal</span>
+            <button class="object-btn border border-gray-300 rounded-md px-2 py-1 bg-white text-xs font-semibold" data-type="Animal" data-color="#10b981">Select</button>
+          </div>
+          <div class="flex items-center justify-between border border-gray-200 rounded-lg bg-white p-2 shadow-sm hover:shadow-md transition-shadow">
+            <span class="font-bold text-sm text-amber-500">Object</span>
+            <button class="object-btn border border-gray-300 rounded-md px-2 py-1 bg-white text-xs font-semibold" data-type="Object" data-color="#f59e0b">Select</button>
+          </div>
+          <div class="flex items-center justify-between border border-gray-200 rounded-lg bg-white p-2 shadow-sm hover:shadow-md transition-shadow">
+            <span class="font-bold text-sm text-violet-600">Building</span>
+            <button class="object-btn border border-gray-300 rounded-md px-2 py-1 bg-white text-xs font-semibold" data-type="Building" data-color="#8b5cf6">Select</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detection Controls -->
+      <div>
+        <h3 class="text-lg font-bold mb-3">Detection Controls</h3>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between border border-gray-200 rounded-lg bg-white p-2 shadow-sm hover:shadow-md transition-shadow">
+            <span class="font-bold text-sm text-green-600">Start Detection</span>
+            <button id="modeAdd" class="border border-gray-300 rounded-md px-2 py-1 bg-white text-xs font-semibold">Enable</button>
+          </div>
+          <div class="flex items-center justify-between border border-gray-200 rounded-lg bg-white p-2 shadow-sm hover:shadow-md transition-shadow">
+            <span class="font-bold text-sm text-blue-600">Auto Detect</span>
+            <button id="modeConnect" class="border border-gray-300 rounded-md px-2 py-1 bg-white text-xs font-semibold">Enable</button>
+          </div>
+          <div class="flex items-center justify-between border border-gray-200 rounded-lg bg-white p-2 shadow-sm hover:shadow-md transition-shadow">
+            <span class="font-bold text-sm text-red-500">Delete Mode</span>
+            <button id="modeDelete" class="border border-gray-300 rounded-md px-2 py-1 bg-white text-xs font-semibold">Enable</button>
+          </div>
+        </div>
+      </div>
+      
+    </aside>
+  </main>
+
+<script>
+// Application State
+let activeImage = null;
+let drawingMode = false;
+let detectMode = false;
+let deleteMode = false;
+let autoDetect = false;
+let isDrawing = false;
+
+// Drawing state
+let drawingCanvas = null;
+let drawingCtx = null;
+let currentBrushSize = 5;
+let currentColor = '#ef4444';
+let currentObjectType = 'Person';
+
+// Data storage
+let bboxes = [];
+let drawingHistory = [];
+let bboxHistory = [];
+
+// Object colors
+const objColors = { 
+  'Person': '#ef4444', 
+  'Vehicle': '#3b82f6', 
+  'Animal': '#10b981', 
+  'Object': '#f59e0b', 
+  'Building': '#8b5cf6' 
+};
+
+// Get DOM elements
+const card = document.getElementById('card');
+const stack = document.getElementById('stack');
+const fileInput = document.getElementById('file');
+const hint = document.getElementById('hint');
+const fileInfo = document.getElementById('fileInfo');
+const fileName = document.getElementById('fileName');
+const urlInput = document.getElementById('urlInput');
+
+const drawBtn = document.getElementById('drawBtn');
+const clearBtn = document.getElementById('clearBtn');
+const undoBtn = document.getElementById('undoBtn');
+const exportBtn = document.getElementById('exportBtn');
+
+const brushSizeSlider = document.getElementById('brushSizeSlider');
+const brushSizeValue = document.getElementById('brushSizeValue');
+
+// Initialize color buttons
+document.querySelectorAll('.color-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('ring-4', 'ring-blue-500'));
+    btn.classList.add('ring-4', 'ring-blue-500');
+    currentColor = btn.dataset.color;
+    if (drawingCtx) {
+      drawingCtx.strokeStyle = currentColor;
+    }
+  });
+});
+
+// Set default color
+document.querySelector('.color-btn[data-color="#ef4444"]').classList.add('ring-4', 'ring-blue-500');
+
+// Initialize object type buttons
+document.querySelectorAll('.object-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.object-btn').forEach(b => {
+      b.className = 'border border-gray-300 rounded-md px-2 py-1 bg-white text-xs font-semibold';
+    });
+    btn.className = 'border border-blue-500 rounded-md px-2 py-1 bg-blue-50 text-xs font-semibold';
+    currentObjectType = btn.dataset.type;
+    currentColor = btn.dataset.color;
+    
+    // Update color selection
+    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('ring-4', 'ring-blue-500'));
+    document.querySelector(`.color-btn[data-color="${currentColor}"]`).classList.add('ring-4', 'ring-blue-500');
+    
+    if (drawingCtx) {
+      drawingCtx.strokeStyle = currentColor;
+    }
+  });
+});
+
+// Set default object type
+document.querySelector('.object-btn[data-type="Person"]').click();
+
+// Brush size controls
+brushSizeSlider.addEventListener('input', () => {
+  currentBrushSize = parseInt(brushSizeSlider.value);
+  brushSizeValue.textContent = currentBrushSize;
+  if (drawingCtx) {
+    drawingCtx.lineWidth = currentBrushSize;
+  }
+});
+
+// Detection mode toggles
+document.getElementById('modeAdd').addEventListener('click', (e) => {
+  detectMode = !detectMode;
+  updateModeButton(e.target, detectMode, 'green');
+  if (detectMode) {
+    autoDetect = deleteMode = false;
+    updateAllModeButtons();
+  }
+});
+
+document.getElementById('modeConnect').addEventListener('click', (e) => {
+  autoDetect = !autoDetect;
+  updateModeButton(e.target, autoDetect, 'blue');
+  if (autoDetect) {
+    detectMode = deleteMode = false;
+    updateAllModeButtons();
+  }
+});
+
+document.getElementById('modeDelete').addEventListener('click', (e) => {
+  deleteMode = !deleteMode;
+  updateModeButton(e.target, deleteMode, 'red');
+  if (deleteMode) {
+    detectMode = autoDetect = false;
+    updateAllModeButtons();
+  }
+});
+
+function updateModeButton(button, isActive, color) {
+  if (isActive) {
+    button.textContent = 'Disable';
+    button.className = `border border-${color}-500 rounded-md px-2 py-1 bg-${color}-50 text-xs font-semibold text-${color}-700`;
+  } else {
+    button.textContent = 'Enable';
+    button.className = 'border border-gray-300 rounded-md px-2 py-1 bg-white text-xs font-semibold';
+  }
+}
+
+function updateAllModeButtons() {
+  updateModeButton(document.getElementById('modeAdd'), detectMode, 'green');
+  updateModeButton(document.getElementById('modeConnect'), autoDetect, 'blue');
+  updateModeButton(document.getElementById('modeDelete'), deleteMode, 'red');
+}
+
+// Drawing functions
+function createDrawingCanvas(container) {
+  const existingCanvas = container.querySelector('.drawing-canvas');
+  if (existingCanvas) {
+    existingCanvas.remove();
+  }
+  
+  const canvas = document.createElement('canvas');
+  canvas.className = 'drawing-canvas';
+  
+  const img = container.querySelector('img');
+  if (img) {
+    const rect = img.getBoundingClientRect();
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.style.width = img.offsetWidth + 'px';
+    canvas.style.height = img.offsetHeight + 'px';
+  }
+  
+  container.appendChild(canvas);
+  return canvas;
+}
+
+function getCanvasPosition(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY
+  };
+}
+
+function startDrawing(e) {
+  if (!drawingMode || !drawingCanvas) return;
+  
+  isDrawing = true;
+  const pos = getCanvasPosition(e, drawingCanvas);
+  
+  // Set drawing properties
+  drawingCtx.lineWidth = currentBrushSize;
+  drawingCtx.lineCap = 'round';
+  drawingCtx.lineJoin = 'round';
+  drawingCtx.globalCompositeOperation = 'source-over';
+  drawingCtx.strokeStyle = currentColor;
+  drawingCtx.globalAlpha = 0.8;
+  
+  drawingCtx.beginPath();
+  drawingCtx.moveTo(pos.x, pos.y);
+  
+  e.preventDefault();
+}
+
+function draw(e) {
+  if (!isDrawing || !drawingMode) return;
+  
+  const pos = getCanvasPosition(e, drawingCanvas);
+  drawingCtx.lineTo(pos.x, pos.y);
+  drawingCtx.stroke();
+  
+  e.preventDefault();
+}
+
+function stopDrawing(e) {
+  if (!isDrawing) return;
+  
+  isDrawing = false;
+  saveDrawingState();
+  e.preventDefault();
+}
+
+function saveDrawingState() {
+  if (drawingCanvas) {
+    drawingHistory.push(drawingCanvas.toDataURL());
+    if (drawingHistory.length > 50) {
+      drawingHistory.shift();
+    }
+  }
+  updateUndoButton();
+}
+
+// Bounding box functions
+let startX = 0, startY = 0, currentBbox = null;
+
+function createBbox(x, y, w, h, type) {
+  const bbox = document.createElement('div');
+  bbox.className = 'bbox';
+  bbox.style.cssText = `left:${x}px; top:${y}px; width:${w}px; height:${h}px; border-color:${objColors[type]}; background:${objColors[type]}20;`;
+  bbox.dataset.type = type;
+  bbox.dataset.id = Date.now().toString();
+
+  const label = document.createElement('div');
+  label.className = 'bbox-label';
+  label.textContent = type;
+  label.style.background = objColors[type];
+  bbox.appendChild(label);
+
+  bbox.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (deleteMode) {
+      removeBbox(bbox);
+    } else {
+      selectBbox(bbox);
+    }
+  });
+
+  return bbox;
+}
+
+function removeBbox(bbox) {
+  const id = bbox.dataset.id;
+  bboxes = bboxes.filter(b => b.id !== id);
+  bbox.remove();
+  saveBboxState();
+}
+
+function selectBbox(bbox) {
+  document.querySelectorAll('.bbox').forEach(b => b.style.boxShadow = '');
+  bbox.style.boxShadow = '0 0 0 2px #10b981';
+}
+
+function startBboxDrawing(e) {
+  if (drawingMode || !detectMode || !activeImage) return;
+  
+  const rect = activeImage.container.getBoundingClientRect();
+  startX = e.clientX - rect.left;
+  startY = e.clientY - rect.top;
+  isDrawing = true;
+
+  currentBbox = document.createElement('div');
+  currentBbox.style.cssText = `position:absolute; border:2px dashed ${objColors[currentObjectType]}; background:${objColors[currentObjectType]}20; left:${startX}px; top:${startY}px; width:0; height:0; pointer-events:none; z-index:5;`;
+  activeImage.container.appendChild(currentBbox);
+  e.preventDefault();
+}
+
+function drawBbox(e) {
+  if (drawingMode || !isDrawing || !currentBbox) return;
+  
+  const rect = activeImage.container.getBoundingClientRect();
+  const currentX = e.clientX - rect.left;
+  const currentY = e.clientY - rect.top;
+  
+  const left = Math.min(startX, currentX);
+  const top = Math.min(startY, currentY);
+  const width = Math.abs(currentX - startX);
+  const height = Math.abs(currentY - startY);
+  
+  currentBbox.style.cssText += `left:${left}px; top:${top}px; width:${width}px; height:${height}px;`;
+  e.preventDefault();
+}
+
+function endBboxDrawing(e) {
+  if (drawingMode || !isDrawing || !currentBbox) return;
+  
+  const width = parseFloat(currentBbox.style.width);
+  const height = parseFloat(currentBbox.style.height);
+  
+  if (width > 20 && height > 20) {
+    const left = parseFloat(currentBbox.style.left);
+    const top = parseFloat(currentBbox.style.top);
+    
+    currentBbox.remove();
+    const bbox = createBbox(left, top, width, height, currentObjectType);
+    activeImage.container.appendChild(bbox);
+    bboxes.push({ element: bbox, x: left, y: top, w: width, h: height, type: currentObjectType, id: bbox.dataset.id });
+    saveBboxState();
+  } else {
+    currentBbox.remove();
+  }
+  
+  isDrawing = false;
+  currentBbox = null;
+  e.preventDefault();
+}
+
+function saveBboxState() {
+  bboxHistory.push(JSON.parse(JSON.stringify(bboxes.map(b => ({
+    x: b.x, y: b.y, w: b.w, h: b.h, type: b.type, id: b.id
+  })))));
+  if (bboxHistory.length > 50) {
+    bboxHistory.shift();
+  }
+  updateUndoButton();
+}
+
+// Button event handlers
+drawBtn.addEventListener('click', () => {
+  if (!activeImage) {
+    alert('Please upload an image first!');
+    return;
+  }
+  
+  drawingMode = !drawingMode;
+  
+  if (drawingMode) {
+    drawBtn.textContent = '⏸️ Stop Drawing';
+    drawBtn.className = 'bg-red-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-700 transition-colors';
+    
+    // Create drawing canvas
+    drawingCanvas = createDrawingCanvas(activeImage.container);
+    drawingCtx = drawingCanvas.getContext('2d');
+    
+    // Add drawing event listeners
+    drawingCanvas.addEventListener('mousedown', startDrawing);
+    drawingCanvas.addEventListener('mousemove', draw);
+    drawingCanvas.addEventListener('mouseup', stopDrawing);
+    drawingCanvas.addEventListener('mouseleave', stopDrawing);
+    
+    // Touch events for mobile
+    drawingCanvas.addEventListener('touchstart', startDrawing);
+    drawingCanvas.addEventListener('touchmove', draw);
+    drawingCanvas.addEventListener('touchend', stopDrawing);
+    
+    // Initialize drawing state
+    drawingHistory = [];
+    
+    // Disable detection modes
+    detectMode = autoDetect = deleteMode = false;
+    updateAllModeButtons();
+    
+  } else {
+    drawBtn.textContent = '✏️ Draw';
+    drawBtn.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors';
+    
+    // Remove drawing canvas
+    if (drawingCanvas) {
+      drawingCanvas.remove();
+      drawingCanvas = null;
+      drawingCtx = null;
+    }
+    drawingHistory = [];
+    updateUndoButton();
+  }
+});
+
+clearBtn.addEventListener('click', () => {
+  if (!activeImage) {
+    alert('Please upload an image first!');
+    return;
+  }
+  
+  if (drawingMode && drawingCanvas) {
+    if (confirm('Clear all drawings?')) {
+      drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+      drawingHistory = [];
+      updateUndoButton();
+    }
+  } else if (bboxes.length > 0) {
+    if (confirm('Clear all bounding boxes?')) {
+      document.querySelectorAll('.bbox').forEach(el => el.remove());
+      bboxes = [];
+      bboxHistory = [];
+      updateUndoButton();
+    }
+  } else {
+    alert('Nothing to clear!');
+  }
+});
+
+undoBtn.addEventListener('click', () => {
+  if (!activeImage) {
+    alert('Please upload an image first!');
+    return;
+  }
+  
+  if (drawingMode && drawingHistory.length > 1) {
+    // Undo drawing
+    drawingHistory.pop();
+    const lastState = drawingHistory[drawingHistory.length - 1];
+    
+    if (lastState) {
+      const img = new Image();
+      img.onload = () => {
+        drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+        drawingCtx.drawImage(img, 0, 0);
+      };
+      img.src = lastState;
+    } else {
+      drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+    }
+  } else if (!drawingMode && bboxHistory.length > 1) {
+    // Undo bounding box changes
+    bboxHistory.pop();
+    const lastState = bboxHistory[bboxHistory.length - 1] || [];
+    
+    // Clear current bboxes
+    document.querySelectorAll('.bbox').forEach(el => el.remove());
+    bboxes = [];
+    
+    // Restore previous state
+    lastState.forEach(bboxData => {
+      const bbox = createBbox(bboxData.x, bboxData.y, bboxData.w, bboxData.h, bboxData.type);
+      bbox.dataset.id = bboxData.id;
+      activeImage.container.appendChild(bbox);
+      bboxes.push({ element: bbox, ...bboxData });
+    });
+  }
+  
+  updateUndoButton();
+});
+
+function updateUndoButton() {
+  const hasDrawingHistory = drawingMode && drawingHistory.length > 1;
+  const hasBboxHistory = !drawingMode && bboxHistory.length > 1;
+  const canUndo = hasDrawingHistory || hasBboxHistory;
+  
+  undoBtn.disabled = !canUndo;
+  undoBtn.classList.toggle('opacity-50', !canUndo);
+  undoBtn.classList.toggle('cursor-not-allowed', !canUndo);
+}
+
+// Export functionality
+exportBtn.addEventListener('click', () => {
+  if (!activeImage) {
+    alert('No image to export!');
+    return;
+  }
+  
+  const exportData = {
+    timestamp: new Date().toISOString(),
+    imageName: activeImage.name,
+    currentObjectType: currentObjectType,
+    detections: bboxes.map(b => ({ x: b.x, y: b.y, w: b.w, h: b.h, type: b.type, id: b.id })),
+    drawingData: drawingCanvas ? drawingCanvas.toDataURL() : null
+  };
+  
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `object_detection_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  alert('Object detection data exported successfully!');
+});
+
+// Image handling - Simplified click logic
+card.addEventListener('click', (e) => {
+  // Always allow image upload when clicking unless actively drawing on canvas
+  if (drawingMode && drawingCanvas && e.target === drawingCanvas) {
+    return; // Allow drawing on canvas
+  }
+  
+  // For any other click, trigger file input
+  fileInput.click();
+});
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files && e.target.files.length) {
+    loadImageFile(e.target.files[0]);
+  }
+});
+
+// Drag & Drop
+['dragenter', 'dragover'].forEach(eventName => {
+  card.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    card.className = 'border-2 border-dashed border-blue-600 rounded-xl bg-blue-50 w-full max-w-4xl h-80 md:h-96 lg:h-[460px] flex items-center justify-center cursor-pointer transition-all duration-200';
+    if (hint) hint.textContent = 'Drop your image here';
+  });
+});
+
+card.addEventListener('dragleave', (e) => {
+  e.preventDefault();
+  card.className = 'border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 w-full max-w-4xl h-80 md:h-96 lg:h-[460px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-blue-600 hover:bg-blue-50';
+  if (hint) hint.textContent = 'Click to select, or drop an image';
+});
+
+card.addEventListener('drop', (e) => {
+  e.preventDefault();
+  card.className = 'border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 w-full max-w-4xl h-80 md:h-96 lg:h-[460px] flex items-center justify-center cursor-pointer transition-all duration-200 hover:border-blue-600 hover:bg-blue-50';
+  if (e.dataTransfer.files && e.dataTransfer.files.length) {
+    loadImageFile(e.dataTransfer.files[0]);
+  }
+});
+
+function loadImageFile(file) {
+  if (!file.type.startsWith('image/')) {
+    alert('Please select an image file');
+    return;
+  }
+  
+  if (hint) {
+    hint.textContent = 'Loading...';
+    hint.className = 'text-blue-600 text-center p-5 text-base font-semibold';
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (e) => createImageElement(e.target.result, file.name);
+  reader.onerror = () => {
+    if (hint) {
+      hint.textContent = 'Failed to load image';
+      hint.className = 'text-red-600 text-center p-5 text-base font-semibold';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function createImageElement(src, name) {
+  // Reset state
+  drawingMode = false;
+  detectMode = autoDetect = deleteMode = false;
+  bboxes = [];
+  drawingHistory = [];
+  bboxHistory = [];
+  
+  // Reset UI
+  drawBtn.textContent = '✏️ Draw';
+  drawBtn.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors';
+  updateAllModeButtons();
+  updateUndoButton();
+  
+  // Remove hint
+  if (hint) hint.remove();
+  
+  // Clear existing content
+  stack.innerHTML = '';
+  
+  // Create container
+  const container = document.createElement('div');
+  container.className = 'relative flex items-center justify-center w-full h-full rounded-lg overflow-hidden';
+  
+  // Add bounding box drawing listeners
+  container.addEventListener('mousedown', startBboxDrawing);
+  container.addEventListener('mousemove', drawBbox);
+  container.addEventListener('mouseup', endBboxDrawing);
+  container.addEventListener('mouseleave', endBboxDrawing);
+  
+  // Create image
+  const img = new Image();
+  img.onload = () => {
+    img.className = 'max-w-full max-h-full w-auto h-auto rounded-lg shadow-lg';
+    container.appendChild(img);
+    stack.appendChild(container);
+    
+    activeImage = { container, img, name, src };
+    fileName.textContent = name;
+    fileInfo.innerHTML = `Loaded: <b>${name}</b>`;
+    
+    // Initialize history
+    bboxHistory = [[]];
+  };
+  
+  img.onerror = () => {
+    stack.innerHTML = '<div class="text-red-600 text-center p-5 text-base font-semibold">Failed to load image</div>';
+  };
+  
+  img.src = src;
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+  updateUndoButton();
+  updateAllModeButtons();
+});
+</script>
+
+</body>
+</html>

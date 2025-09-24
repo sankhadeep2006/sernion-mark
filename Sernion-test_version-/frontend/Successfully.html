@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Success</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f8f8f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      padding: 16px;
+    }
+    
+    .success-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 600px;
+    }
+    
+    .success-card {
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.13);
+      text-align: center;
+      width: 100%;
+      
+      /* Mobile styles (default) */
+      padding: 40px 20px;
+    }
+    
+    /* Tablet styles */
+    @media (min-width: 640px) {
+      .success-card {
+        padding: 60px 40px;
+      }
+    }
+    
+    /* Desktop styles */
+    @media (min-width: 1024px) {
+      .success-card {
+        padding: 110px 160px;
+      }
+    }
+    
+    .check-icon {
+      background: black;
+      color: white;
+      border-radius: 16px;
+      margin: auto;
+      animation: pop-check 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      /* Mobile styles */
+      font-size: 32px;
+      width: 60px;
+      height: 60px;
+      margin-bottom: 20px;
+    }
+    
+    /* Tablet styles */
+    @media (min-width: 640px) {
+      .check-icon {
+        font-size: 42px;
+        width: 80px;
+        height: 80px;
+        margin-bottom: 24px;
+      }
+    }
+    
+    /* Desktop styles */
+    @media (min-width: 1024px) {
+      .check-icon {
+        font-size: 54px;
+        width: 100px;
+        height: 100px;
+        margin-bottom: 32px;
+      }
+    }
+    
+    @keyframes pop-check {
+      0% {
+        transform: scale(0.2) rotate(-30deg);
+        opacity: 0;
+      }
+      60% {
+        transform: scale(1.2) rotate(10deg);
+        opacity: 1;
+      }
+      80% {
+        transform: scale(0.95) rotate(-5deg);
+      }
+      100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+    
+    h2 {
+      font-weight: bold;
+      margin: 0;
+      color: #333;
+      line-height: 1.2;
+      
+      /* Mobile styles */
+      font-size: 20px;
+    }
+    
+    /* Tablet styles */
+    @media (min-width: 640px) {
+      h2 {
+        font-size: 26px;
+      }
+    }
+    
+    /* Desktop styles */
+    @media (min-width: 1024px) {
+      h2 {
+        font-size: 32px;
+      }
+    }
+    
+    /* Extra small devices adjustments */
+    @media (max-width: 375px) {
+      body {
+        padding: 12px;
+      }
+      
+      .success-card {
+        padding: 30px 16px;
+        border-radius: 12px;
+      }
+      
+      .check-icon {
+        font-size: 28px;
+        width: 50px;
+        height: 50px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+      }
+      
+      h2 {
+        font-size: 18px;
+      }
+    }
+    
+    /* Large desktop */
+    @media (min-width: 1440px) {
+      .success-card {
+        padding: 130px 180px;
+      }
+      
+      .check-icon {
+        font-size: 60px;
+        width: 110px;
+        height: 110px;
+        margin-bottom: 36px;
+      }
+      
+      h2 {
+        font-size: 36px;
+      }
+    }
+    
+    /* Landscape mobile adjustments */
+    @media (max-height: 500px) and (orientation: landscape) {
+      body {
+        align-items: flex-start;
+        padding-top: 20px;
+      }
+      
+      .success-card {
+        padding: 20px 30px;
+      }
+      
+      .check-icon {
+        font-size: 24px;
+        width: 45px;
+        height: 45px;
+        margin-bottom: 12px;
+      }
+      
+      h2 {
+        font-size: 16px;
+      }
+    }
+    
+    /* High DPI displays */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+      .success-card {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      }
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #000000;
+      }
+      
+      .success-card {
+        background: #2d2d2d;
+        color: white;
+      }
+      
+      .check-icon {
+        background: white;
+        color: black;
+      }
+      
+      h2 {
+        color: white;
+      }
+      #summaryContent { color: #e5e5e5; }
+    }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      .check-icon {
+        animation: none;
+      }
+    }
+    
+    /* Focus and hover states for accessibility */
+    .success-card:focus-within {
+      outline: 2px solid #007bff;
+      outline-offset: 4px;
+    }
+    
+    /* Print styles */
+    @media print {
+      body {
+        background: white;
+        box-shadow: none;
+      }
+      
+      .success-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="success-container">
+    <div class="success-card" id="successCard">
+      <div class="check-icon">✔</div>
+      <h2>Created Successfully</h2>
+      <div id="summary" style="text-align:left; margin-top:28px; font-size:14px; line-height:1.5;">
+        <div style="font-weight:600; margin-bottom:8px;">Summary</div>
+        <div id="summaryContent">
+          Loading project details...
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    function renderSummary(){
+      const name = sessionStorage.getItem('projectName') || '—';
+      const desc = sessionStorage.getItem('projectDescription') || 'No description provided';
+      const deadline = sessionStorage.getItem('projectDeadline') || 'Not set';
+      const priority = sessionStorage.getItem('projectPriority') || 'Not set';
+      const dataType = localStorage.getItem('selectedDataType') || '—';
+      const annotation = localStorage.getItem('selectedAnnotation') || '—';
+      let team = [];
+      try { team = JSON.parse(localStorage.getItem('teamMembers')||'[]'); } catch(e) {}
+      const summaryEl = document.getElementById('summaryContent');
+      summaryEl.innerHTML = `
+        <strong>Project Name:</strong> ${name}<br>
+        <strong>Description:</strong> ${desc}<br>
+        <strong>Deadline:</strong> ${deadline}<br>
+        <strong>Priority:</strong> ${priority}<br>
+        <strong>Data Type:</strong> ${dataType}<br>
+        <strong>Annotation:</strong> ${annotation}<br>
+        <strong>Team Members:</strong> ${team.length ? team.length + ' member(s)' : 'None added'}
+      `;
+    }
+    renderSummary();
+    setTimeout(() => { window.location.href = "dashboard.html"; }, 4000);
+  </script>
+</body>
+</html>

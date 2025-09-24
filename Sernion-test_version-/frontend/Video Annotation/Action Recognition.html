@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Action Recognition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .progress-line {
+            background: white;
+            width: 2px;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            box-shadow: 0 0 4px rgba(0,0,0,0.3);
+            z-index: 10;
+            transition: left 0.1s ease;
+        }
+        .timeline-progress {
+            background: #3b82f6;
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.1s ease;
+        }
+        .timeline-segment {
+            position: absolute;
+            height: 100%;
+            background: rgba(255, 165, 0, 0.6);
+            border-right: 2px solid #ff6b35;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-6 h-6 bg-blue-500 rounded flex items-center justify-center text-white">
+                    <i class="bi bi-play-fill text-sm"></i>
+                </div>
+                <div>
+                    <h1 id="fileName" class="text-lg font-semibold text-gray-900">Video.mp4</h1>
+                    <p class="text-xs text-gray-500">Action Recognition</p>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                <i class="bi bi-arrow-left"></i>
+               <a href="/frontend/Datasets.html"> Back to project</a>
+            </button>
+            <button id="saveBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800">
+                <i class="bi bi-save"></i>
+                Save Annotation
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Left Panel -->
+        <div class="flex-1 bg-white p-6 flex flex-col">
+            <!-- Upload Section -->
+            <div class="mb-6">
+                <label for="fileInput" class="inline-flex items-center gap-2 px-5 py-3 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-pointer hover:border-gray-400 hover:bg-gray-100">
+                    <i class="bi bi-file-earmark-play"></i>
+                    Select Audio File
+                </label>
+            </div>
+
+            <!-- Video Container - Larger -->
+            <div id="videoContainer" class="w-full h-96 md:h-[500px] bg-black rounded-lg mb-6 flex items-center justify-center relative overflow-hidden cursor-pointer">
+                <video id="videoPlayer" controls class="w-full h-full object-contain hidden"></video>
+                <div id="videoPlaceholder" class="text-gray-400 text-lg">
+                    Uploaded Video
+                </div>
+            </div>
+
+            <!-- Controls Bar - Wider and Centered -->
+            <div class="flex items-center justify-center gap-6 mb-6 px-4">
+                <button id="playPauseBtn" class="w-12 h-12 border border-gray-300 rounded-lg bg-white flex items-center justify-center hover:bg-gray-50 text-gray-700">
+                    <i class="bi bi-play-fill text-xl"></i>
+                </button>
+
+                <div class="flex items-center gap-3">
+                    <button id="seekBackBtn" class="w-10 h-10 border border-gray-300 rounded-lg bg-white flex items-center justify-center hover:bg-gray-50 text-gray-700">
+                        <i class="bi bi-skip-start-fill"></i>
+                    </button>
+                    <span class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs text-gray-600">-10s</span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button id="seekForwardBtn" class="w-10 h-10 border border-gray-300 rounded-lg bg-white flex items-center justify-center hover:bg-gray-50 text-gray-700">
+                        <i class="bi bi-skip-end-fill"></i>
+                    </button>
+                    <span class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs text-gray-600">+10s</span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs text-gray-600">Speed</span>
+                    <select id="speedSelect" class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="0.5">0.5x</option>
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2x</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Timeline with Moving Progress Line -->
+            <div class="mb-4">
+                <div class="relative">
+                    <div id="timeline" class="w-full h-6 bg-gray-200 rounded-full cursor-pointer overflow-hidden relative">
+                        <div id="timelineProgress" class="timeline-progress absolute top-0 left-0 w-0"></div>
+                        <div id="progressLine" class="progress-line" style="left: 0%"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mt-2 text-sm text-gray-600">
+                    <span id="currentTime">00:00</span>
+                    <span id="duration">00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Annotation Tools -->
+        <div class="w-96 bg-white border-l border-gray-200 flex flex-col">
+            <div class="bg-gray-200 px-5 py-4 border-b border-gray-300">
+                <div class="flex items-center gap-2 text-gray-900 font-semibold">
+                    <i class="bi bi-tools"></i>
+                    Annotation Tools
+                </div>
+            </div>
+            
+            <div class="flex-1 p-6 overflow-y-auto">
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Action Types</h3>
+                    <div id="actionList" class="space-y-0">
+                        <div class="action-item flex items-center justify-between p-3 border border-gray-300 bg-white cursor-pointer  first:rounded-t-md last:rounded-b-md -mb-px" data-action="Walking">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L9 8.3V13h2V9.6l1.8-.7"/>
+                                </svg>
+                                <span class="font-medium">Walking</span>
+                            </div>
+                            <i class="bi bi-check-circle-fill text-green-600 hidden check-icon"></i>
+                        </div>
+
+                        <div class="action-item flex items-center justify-between p-3 border border-gray-300 bg-white cursor-pointer  first:rounded-t-md last:rounded-b-md -mb-px" data-action="Running">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/>
+                                </svg>
+                                <span class="font-medium">Running</span>
+                            </div>
+                            <i class="bi bi-check-circle-fill text-green-600 hidden check-icon"></i>
+                        </div>
+
+                        <div class="action-item flex items-center justify-between p-3 border border-gray-300 bg-white cursor-pointer  first:rounded-t-md last:rounded-b-md -mb-px" data-action="Sitting">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M7 14c-1.66 0-3 1.34-3 3 0 1.31-1.16 2-2 2 .92 1.22 2.49 2 4 2 2.21 0 4-1.79 4-4 0-1.66-1.34-3-3-3zm7.25-3c.41 0 .75-.34.75-.75s-.34-.75-.75-.75-.75.34-.75.75.34.75.75.75zm-4.5 0c.41 0 .75-.34.75-.75s-.34-.75-.75-.75-.75.34-.75.75.34.75.75.75z"/>
+                                    <path d="M22.5 9.5c0-.83-.67-1.5-1.5-1.5h-2.4c-.74-1.19-2.04-2-3.6-2h-2c-1.56 0-2.86.81-3.6 2H6.5C5.67 8 5 8.67 5 9.5S5.67 11 6.5 11H8v8c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-8h1.5c.83 0 1.5-.67 1.5-1.5z"/>
+                                </svg>
+                                <span class="font-medium">Sitting</span>
+                            </div>
+                            <i class="bi bi-check-circle-fill text-green-600 hidden check-icon"></i>
+                        </div>
+
+                        <div class="action-item flex items-center justify-between p-3 border border-gray-300 bg-white cursor-pointer  first:rounded-t-md last:rounded-b-md -mb-px" data-action="Jumping">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M7.5 2C8.33 2 9 2.67 9 3.5S8.33 5 7.5 5 6 4.33 6 3.5 6.67 2 7.5 2M16 7.5L14.75 5.25C14.38 4.58 13.63 4.25 12.88 4.25C12.63 4.25 12.38 4.31 12.13 4.44L7.5 6.69V10H9V7.31L10.81 6.56L9.31 11H11.75L12.94 8L14.06 10V15H16V9.5C16 8.67 15.33 8 14.5 8S13 8.67 13 9.5V10.69L11.31 7.81L12.75 7.06C13.19 6.88 13.69 6.88 14.13 7.06L16 7.5Z"/>
+                                    <path d="M12.5 11.5C12.5 10.67 13.17 10 14 10S15.5 10.67 15.5 11.5 14.83 13 14 13 12.5 12.33 12.5 11.5M3 15.5V17.5H21V15.5H3Z"/>
+                                </svg>
+                                <span class="font-medium">Jumping</span>
+                            </div>
+                            <i class="bi bi-check-circle-fill text-green-600 hidden check-icon"></i>
+                        </div>
+
+                        <div class="action-item flex items-center justify-between p-3 border border-gray-300 bg-white cursor-pointer  first:rounded-t-md last:rounded-b-md" data-action="Other">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 10C4.9 10 4 10.9 4 12S4.9 14 6 14 8 13.1 8 12 7.1 10 6 10M12 10C10.9 10 10 10.9 10 12S10.9 14 12 14 14 13.1 14 12 13.1 10 12 10M18 10C16.9 10 16 10.9 16 12S16.9 14 18 14 20 13.1 20 12 19.1 10 18 10Z"/>
+                                </svg>
+                                <span class="font-medium">Other</span>
+                            </div>
+                            <i class="bi bi-check-circle-fill text-green-600 hidden check-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Timeline Markers</h3>
+                    <div class="mb-4">
+                        <ol class="text-xs text-gray-600 leading-relaxed pl-4 space-y-1">
+                            <li>1.Select an action type</li>
+                            <li>2.Click on timeline to mark start</li>
+                            <li>3.Click again to mark end</li>
+                        </ol>
+                    </div>
+
+                    <div class="space-y-3">
+                        <button id="addMarkerBtn" class="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
+                            <i class="bi bi-bookmark-plus"></i>
+                            Add Timeline Marker
+                        </button>
+                        <button id="clearMarkersBtn" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium hover:bg-gray-800">
+                            <i class="bi bi-trash3"></i>
+                            Clear All Marker
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept="video/*" class="hidden">
+
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('fileInput');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoContainer = document.getElementById('videoContainer');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const fileName = document.getElementById('fileName');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const seekBackBtn = document.getElementById('seekBackBtn');
+        const seekForwardBtn = document.getElementById('seekForwardBtn');
+        const speedSelect = document.getElementById('speedSelect');
+        const timeline = document.getElementById('timeline');
+        const timelineProgress = document.getElementById('timelineProgress');
+        const progressLine = document.getElementById('progressLine');
+        const currentTime = document.getElementById('currentTime');
+        const duration = document.getElementById('duration');
+        const saveBtn = document.getElementById('saveBtn');
+        const actionList = document.getElementById('actionList');
+        const addMarkerBtn = document.getElementById('addMarkerBtn');
+        const clearMarkersBtn = document.getElementById('clearMarkersBtn');
+
+        // State
+        let selectedAction = null;
+        let markers = [];
+        let pendingStartTime = null;
+
+        // Format time helper
+        function formatTime(seconds) {
+            if (!isFinite(seconds)) return '00:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Update progress bar and moving line
+        function updateProgress() {
+            if (!videoPlayer.duration) return;
+            
+            const progress = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+            timelineProgress.style.width = progress + '%';
+            progressLine.style.left = progress + '%';
+        }
+
+        // File upload handler
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                fileName.textContent = file.name;
+                const videoURL = URL.createObjectURL(file);
+                videoPlayer.src = videoURL;
+                videoPlayer.classList.remove('hidden');
+                videoPlaceholder.classList.add('hidden');
+                videoPlayer.load();
+            }
+        });
+
+        videoContainer.addEventListener('click', function() {
+            if (!videoPlayer.src) fileInput.click();
+        });
+
+        playPauseBtn.addEventListener('click', function() {
+            if (!videoPlayer.src) return;
+            if (videoPlayer.paused) {
+                videoPlayer.play();
+                playPauseBtn.innerHTML = '<i class="bi bi-pause-fill text-xl"></i>';
+            } else {
+                videoPlayer.pause();
+                playPauseBtn.innerHTML = '<i class="bi bi-play-fill text-xl"></i>';
+            }
+        });
+
+        videoPlayer.addEventListener('play', function() {
+            playPauseBtn.innerHTML = '<i class="bi bi-pause-fill text-xl"></i>';
+        });
+
+        videoPlayer.addEventListener('pause', function() {
+            playPauseBtn.innerHTML = '<i class="bi bi-play-fill text-xl"></i>';
+        });
+
+        seekBackBtn.addEventListener('click', () => {
+            if (videoPlayer.src) videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
+        });
+
+        seekForwardBtn.addEventListener('click', () => {
+            if (videoPlayer.src) videoPlayer.currentTime = Math.min(videoPlayer.duration || 0, videoPlayer.currentTime + 10);
+        });
+
+        speedSelect.addEventListener('change', function() {
+            if (videoPlayer.src) videoPlayer.playbackRate = parseFloat(this.value);
+        });
+
+        // Time update with progress animation
+        videoPlayer.addEventListener('timeupdate', function() {
+            const time = formatTime(videoPlayer.currentTime);
+            currentTime.textContent = time;
+            updateProgress();
+        });
+
+        videoPlayer.addEventListener('loadedmetadata', function() {
+            const dur = formatTime(videoPlayer.duration);
+            duration.textContent = dur;
+            updateProgress();
+        });
+
+        // Timeline click for seeking and annotation
+        timeline.addEventListener('click', function(e) {
+            if (!videoPlayer.duration) return;
+            
+            const rect = timeline.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            const timeInSeconds = percentage * videoPlayer.duration;
+            
+            if (!selectedAction) {
+                videoPlayer.currentTime = timeInSeconds;
+                return;
+            }
+
+            if (pendingStartTime === null) {
+                pendingStartTime = timeInSeconds;
+            } else {
+                createMarker(Math.min(pendingStartTime, timeInSeconds), Math.max(pendingStartTime, timeInSeconds), selectedAction);
+                pendingStartTime = null;
+            }
+        });
+
+        // Action selection with Tailwind classes
+        actionList.addEventListener('click', function(e) {
+            const actionItem = e.target.closest('.action-item');
+            if (actionItem) {
+                document.querySelectorAll('.action-item').forEach(item => {
+                    item.classList.remove('bg-gray-900', 'text-white');
+                    item.classList.add('bg-white', 'text-gray-700');
+                    item.querySelector('.check-icon').classList.add('hidden');
+                    item.querySelector('svg').classList.remove('text-white');
+                    item.querySelector('svg').classList.add('text-gray-700');
+                });
+                
+                actionItem.classList.remove('bg-white', 'text-gray-700');
+                actionItem.classList.add('bg-gray-900', 'text-white');
+                actionItem.querySelector('.check-icon').classList.remove('hidden');
+                actionItem.querySelector('svg').classList.remove('text-gray-700');
+                actionItem.querySelector('svg').classList.add('text-white');
+                selectedAction = actionItem.dataset.action;
+            }
+        });
+
+        function createMarker(startTime, endTime, action) {
+            const marker = { id: Date.now(), startTime, endTime, action };
+            markers.push(marker);
+            renderMarker(marker);
+        }
+
+        function renderMarker(marker) {
+            const markerElement = document.createElement('div');
+            markerElement.className = 'timeline-segment';
+            markerElement.dataset.markerId = marker.id;
+            const startPercent = (marker.startTime / videoPlayer.duration) * 100;
+            const widthPercent = ((marker.endTime - marker.startTime) / videoPlayer.duration) * 100;
+            markerElement.style.left = startPercent + '%';
+            markerElement.style.width = widthPercent + '%';
+            markerElement.title = `${marker.action}: ${formatTime(marker.startTime)} - ${formatTime(marker.endTime)}`;
+            timeline.appendChild(markerElement);
+        }
+
+        addMarkerBtn.addEventListener('click', function() {
+            if (!selectedAction) return alert('Please select an action type first');
+            if (!videoPlayer.duration) return alert('Please upload a video first');
+            createMarker(
+                Math.max(0, videoPlayer.currentTime - 2),
+                Math.min(videoPlayer.duration, videoPlayer.currentTime + 2),
+                selectedAction
+            );
+        });
+
+        clearMarkersBtn.addEventListener('click', function() {
+            markers = [];
+            pendingStartTime = null;
+            timeline.innerHTML = '<div id="timelineProgress" class="timeline-progress absolute top-0 left-0 w-0"></div><div id="progressLine" class="progress-line" style="left: 0%"></div>';
+            // Re-get references
+            timelineProgress = document.getElementById('timelineProgress');
+            progressLine = document.getElementById('progressLine');
+            updateProgress();
+        });
+
+        saveBtn.addEventListener('click', function() {
+            const annotations = {
+                videoFile: fileName.textContent,
+                duration: videoPlayer.duration || 0,
+                markers: markers.map(marker => ({
+                    startTime: marker.startTime,
+                    endTime: marker.endTime,
+                    action: marker.action,
+                    duration: marker.endTime - marker.startTime
+                }))
+            };
+            const blob = new Blob([JSON.stringify(annotations, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; 
+            a.download = 'video-annotations.json';
+            document.body.appendChild(a); 
+            a.click(); 
+            document.body.removeChild(a); 
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>

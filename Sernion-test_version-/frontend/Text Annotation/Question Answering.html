@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Question Answering Annotation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center px-8 pt-8 mb-7">
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 bg-gray-600 rounded flex items-center justify-center text-white text-xs font-bold">T</div>
+      <div>
+        <div id="pageTitle" class="text-2xl font-semibold text-gray-800">Text.txt</div>
+        <div class="text-gray-500 text-sm mt-1">Question Answering</div>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button
+        class="px-4 py-2 border border-gray-300 bg-white rounded-lg cursor-pointer text-base flex items-center gap-2 hover:bg-gray-100"
+        onclick="goBack()">← Back to project</button>
+      <button
+        class="px-4 py-2 border border-gray-900 bg-gray-900 text-white rounded-lg cursor-pointer text-base flex items-center gap-2 hover:bg-gray-700"
+        onclick="saveAnnotation()">🔒 Save Annotation</button>
+    </div>
+  </div>
+  </div>
+
+  <!-- Main Centered Q&A Form -->
+  <div class="flex flex-1 flex-col items-center justify-center px-8">
+    <div class="w-full max-w-3xl">
+
+      <input id="questionBox"
+        type="text"
+        placeholder="Question"
+        class="w-full rounded border-2 border-gray-900 text-base px-4 py-6 mb-8 placeholder-gray-400 focus:outline-none"/>
+
+      <textarea id="answerBox"
+        placeholder="Answer"
+        class="w-full rounded border-2 border-gray-900 text-base px-4 py-6 mb-8 h-[300px] resize-y placeholder-gray-400 focus:outline-none"></textarea>
+
+      <button id="saveQA" class="bg-blue-700 text-white px-8 py-2 rounded font-semibold text-base mb-3" onclick="saveQA()">Save Q&A</button>
+
+      <div id="progressInfo" class="text-right text-sm text-gray-800 mt-2 mb-8">0/200 Q&amp;A pairs annotated</div>
+    </div>
+  </div>
+
+  <!-- Shortcuts bottom left -->
+  <div class="fixed left-8 bottom-10">
+    <div class="font-bold text-lg mb-3">Shortcuts</div>
+    <div class="flex items-center gap-3 mb-2 shortcut-item cursor-pointer select-none" id="sc-q">
+      <div class="shortcut-key bg-gray-200 px-4 py-1 rounded text-base font-bold min-w-[36px] text-center">1</div>
+      <span class="text-base">→ Question</span>
+    </div>
+    <div class="flex items-center gap-3 mb-2 shortcut-item cursor-pointer select-none" id="sc-a">
+      <div class="shortcut-key bg-gray-200 px-4 py-1 rounded text-base font-bold min-w-[36px] text-center">2</div>
+      <span class="text-base">→ Answer</span>
+    </div>
+  </div>
+
+  <!-- JS: Shortcuts and Save logic -->
+  <script>
+    let annotatedCount = 0;
+    const totalPairs = 200;
+
+    // Shortcut selection logic
+    function highlightShortcut(target) {
+      document.querySelectorAll('.shortcut-key').forEach(k => k.classList.remove('bg-gray-900', 'text-white'));
+      target.classList.add('bg-gray-900', 'text-white');
+    }
+
+    // Shortcut handlers
+    document.getElementById('sc-q').addEventListener('click', () => {
+      document.getElementById('questionBox').focus();
+      highlightShortcut(document.getElementById('sc-q').querySelector('.shortcut-key'));
+    });
+    document.getElementById('sc-a').addEventListener('click', () => {
+      document.getElementById('answerBox').focus();
+      highlightShortcut(document.getElementById('sc-a').querySelector('.shortcut-key'));
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '1') {
+        e.preventDefault();
+        document.getElementById('questionBox').focus();
+        highlightShortcut(document.getElementById('sc-q').querySelector('.shortcut-key'));
+      }
+      if (e.key === '2') {
+        e.preventDefault();
+        document.getElementById('answerBox').focus();
+        highlightShortcut(document.getElementById('sc-a').querySelector('.shortcut-key'));
+      }
+    });
+
+    // Save Q&A logic
+    function saveQA() {
+      const ques = document.getElementById('questionBox').value.trim();
+      const ans = document.getElementById('answerBox').value.trim();
+      if (!ques || !ans) {
+        alert('Please fill both Question and Answer!');
+        return;
+      }
+      annotatedCount++;
+      document.getElementById('progressInfo').textContent = `${annotatedCount}/200 Q&A pairs annotated`;
+      alert('Q&A saved!');
+      document.getElementById('questionBox').value = '';
+      document.getElementById('answerBox').value = '';
+      document.getElementById('questionBox').focus();
+      highlightShortcut(document.getElementById('sc-q').querySelector('.shortcut-key'));
+    }
+    function saveAnnotation() {
+      alert('All annotations saved successfully!');
+    }
+    function goBack() {
+      window.location.href = "/frontend/Datasets.html";
+    }
+  </script>
+</body>
+</html>

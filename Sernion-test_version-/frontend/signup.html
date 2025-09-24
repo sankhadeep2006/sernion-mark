@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign Up</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <style>
+    /* Custom styles for proper eye icon positioning */
+    .input-container {
+      position: relative;
+      width: 100%;
+    }
+    .eye-icon {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      cursor: pointer;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      pointer-events: auto;
+    }
+    .error-message {
+      margin-top: 4px;
+      color: #ef4444;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+    }
+    .error-message:before {
+      content: "\f06a";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      margin-right: 0.25rem;
+      font-size: 0.75rem;
+    }
+    .shake-animation {
+      animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+      40%, 60% { transform: translate3d(3px, 0, 0); }
+    }
+  </style>
+  <script src="js/api.js" defer></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen font-['Inter',sans-serif]">
+  <div class="bg-white p-10 rounded-xl shadow-lg max-w-md w-full mx-4">
+    <h2 class="text-2xl font-semibold text-center mb-2">Welcome Back</h2>
+    <p class="text-center text-sm text-gray-600 mb-6">Sign into your account to continue</p>
+
+    <form id="signupForm" class="space-y-5">
+      <!-- Full name field -->
+      <div>
+        <label class="block text-sm mb-1.5">Full name <span class="text-red-500">*</span></label>
+        <div class="input-container">
+          <input type="text" id="fullName" name="full_name" placeholder="Enter your full name" 
+            class="w-full border bg-gray-100 rounded-md outline-none py-2.5 px-3 text-sm transition" />
+        </div>
+        <div id="fullNameError" class="error-message hidden"></div>
+      </div>
+      
+      <!-- Email field -->
+      <div>
+        <label class="block text-sm mb-1.5">Email <span class="text-red-500">*</span></label>
+        <div class="input-container">
+          <input type="email" id="email" name="email" placeholder="Enter your email" 
+            class="w-full border bg-gray-100 rounded-md outline-none py-2.5 px-3 text-sm transition" />
+        </div>
+        <div id="emailError" class="error-message hidden"></div>
+      </div>
+      
+      <!-- Username field -->
+      <div>
+        <label class="block text-sm mb-1.5">Username <span class="text-red-500">*</span></label>
+        <div class="input-container">
+          <input type="text" id="username" name="username" placeholder="Choose a username" 
+            class="w-full border bg-gray-100 rounded-md outline-none py-2.5 px-3 text-sm transition" />
+        </div>
+      </div>
+
+      <!-- Password field -->
+      <div>
+        <label class="block text-sm mb-1.5">Password <span class="text-red-500">*</span></label>
+        <div class="input-container">
+          <input type="password" id="password" name="password" placeholder="Enter your password"
+            class="w-full border bg-gray-100 rounded-md outline-none py-2.5 px-3 text-sm transition" />
+          <div class="eye-icon" id="togglePassword">
+            <i class="fa-solid fa-eye-slash text-gray-500"></i>
+          </div>
+        </div>
+        <div id="passwordError" class="error-message hidden"></div>
+      </div>
+      
+      <!-- Confirm password field -->
+      <div>
+        <label class="block text-sm mb-1.5">Confirm password <span class="text-red-500">*</span></label>
+        <div class="input-container">
+          <input type="password" id="confirmPassword" name="password_confirm" placeholder="Re-enter password"
+            class="w-full border bg-gray-100 rounded-md outline-none py-2.5 px-3 text-sm transition" />
+          <div class="eye-icon" id="toggleConfirmPassword">
+            <i class="fa-solid fa-eye-slash text-gray-500"></i>
+          </div>
+        </div>
+        <div id="confirmPasswordError" class="error-message hidden"></div>
+      </div>
+      
+      <!-- Continue button -->
+      <button id="continueBtn" type="submit"
+        class="w-full bg-black text-white py-3 rounded-md text-center block text-base font-medium hover:bg-gray-800 transition mt-2">
+        Continue
+      </button>
+      
+      <!-- OR divider -->
+      <div class="relative flex items-center my-5">
+        <div class="flex-grow border-t border-gray-300"></div>
+        <span class="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
+        <div class="flex-grow border-t border-gray-300"></div>
+      </div>
+      
+      <!-- Google button -->
+      <a href="/accounts/google/login/" class="w-full border border-gray-300 rounded-full py-2.5 px-3 flex items-center justify-center hover:bg-gray-50 transition">
+        <img src="src/png/Google.png" alt="Google logo" class="w-[30px] h-[30px] mr-2 rounded-full">
+        <span class="text-sm">Continue with Google</span>
+      </a>
+      
+      <!-- Login link -->
+      <div class="text-center text-sm mt-5">
+        Already have an account? 
+        <a href="login.html" class="font-semibold text-black hover:underline">Log in</a>
+      </div>
+      
+      <!-- Terms text -->
+      <div class="text-center text-xs text-gray-500 mt-6">
+        By continuing, you agree to our 
+        <a href="#" class="font-semibold text-black hover:underline">Terms of Service</a> and 
+        <a href="#" class="font-semibold text-black hover:underline">Privacy Policy</a>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Keep only password visibility toggles; API submission is handled by api.js's setupSignupForm
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const togglePassword = document.getElementById('togglePassword');
+    const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+    togglePassword.addEventListener('click', function () {
+      const type = passwordInput.type === 'password' ? 'text' : 'password';
+      passwordInput.type = type;
+      const icon = this.querySelector('i');
+      icon.classList.toggle('fa-eye');
+      icon.classList.toggle('fa-eye-slash');
+    });
+    toggleConfirmPassword.addEventListener('click', function () {
+      const type = confirmPasswordInput.type === 'password' ? 'text' : 'password';
+      confirmPasswordInput.type = type;
+      const icon = this.querySelector('i');
+      icon.classList.toggle('fa-eye');
+      icon.classList.toggle('fa-eye-slash');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reset Password</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <style>
+    .shake-animation {
+      animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+      40%, 60% { transform: translate3d(3px, 0, 0); }
+    }
+    .error-message {
+      margin-top: 4px;
+      color: #ef4444;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+    }
+    .error-message:before {
+      content: "\f06a";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      margin-right: 0.25rem;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center px-4 font-[Inter]">
+  <div class="w-full max-w-md bg-white p-6 rounded-xl shadow-lg">
+    
+    <!-- Enter New Password -->
+    <label class="block text-sm font-bold mb-1">Enter New Password</label>
+    <div class="relative mb-3">
+      <input type="password" required class="w-full border rounded-md py-2.5 px-3 outline-none" id="newPass">
+      <i class="fa-solid fa-eye-slash absolute right-3 top-3 text-gray-500 cursor-pointer"></i>
+    </div>
+
+    <!-- Confirm Password -->
+    <label class="block text-sm font-bold mb-1">Confirm Password</label>
+    <div class="relative mb-4">
+      <input type="password" required class="w-full border rounded-md py-2.5 px-3 outline-none" id="confirmPass">
+      <i class="fa-solid fa-eye-slash absolute right-3 top-3 text-gray-500 cursor-pointer"></i>
+    </div>
+
+    <!-- Continue Button -->
+    <button id="continueBtn" class="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 transition">
+      Continue
+    </button>
+    
+  </div>
+
+  <script>
+    const eyeIcons = document.querySelectorAll('.fa-eye-slash');
+    const passwordInputs = document.querySelectorAll('input[type="password"]');
+  
+    // Toggle eye icon (show/hide password)
+    eyeIcons.forEach((icon, index) => {
+      icon.addEventListener('click', () => {
+        const input = passwordInputs[index];
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
+      });
+    });
+  
+    // Validation on Continue button
+    const continueBtn = document.getElementById('continueBtn');
+    continueBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const [newPass, confirmPass] = passwordInputs;
+      const existingError = document.querySelector('.error-message');
+      if (existingError) existingError.remove();
+  
+      const newVal = newPass.value.trim();
+      const confirmVal = confirmPass.value.trim();
+  
+      if (!newVal || !confirmVal) {
+        showError(confirmPass, "Both fields are required.");
+        return;
+      }
+      if (newVal.length < 6 || confirmVal.length < 6) {
+        showError(confirmPass, "Password must be at least 6 characters.");
+        return;
+      }
+      if (newVal !== confirmVal) {
+        showError(confirmPass, "Passwords do not match.");
+        return;
+      }
+  
+      // If everything is valid → go to next page
+      window.location.href = "verification3.html";
+    });
+  
+    // Helper: show error message
+    function showError(inputField, message) {
+      inputField.classList.add('shake-animation');
+      const errorMsg = document.createElement('div');
+      errorMsg.className = 'error-message';
+      errorMsg.textContent = message;
+      inputField.parentElement.appendChild(errorMsg);
+  
+      setTimeout(() => {
+        inputField.classList.remove('shake-animation');
+      }, 820);
+    }
+  </script>
+</body>
+</html>

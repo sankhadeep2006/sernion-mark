@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Action Recognition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .progress-line {
+            background: white;
+            width: 2px;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            box-shadow: 0 0 4px rgba(0,0,0,0.3);
+            z-index: 10;
+            transition: left 0.1s ease;
+        }
+        .timeline-progress {
+            background: #3b82f6;
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.1s ease;
+        }
+        .timeline-segment {
+            position: absolute;
+            height: 100%;
+            background: rgba(255, 165, 0, 0.6);
+            border-right: 2px solid #ff6b35;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-6 h-6 bg-blue-500 rounded flex items-center justify-center text-white">
+                    <i class="bi bi-play-fill text-sm"></i>
+                </div>
+                <div>
+                    <h1 id="fileName" class="text-lg font-semibold text-gray-900">Video.mp4</h1>
+                    <p class="text-xs text-gray-500">Action Recognition</p>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 text-sm font-medium ">
+                <i class="bi bi-arrow-left"></i>
+             <a href="/frontend/Datasets.html">  Back to project</a>
+            </button>
+            <button id="saveBtn" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md text-sm font-medium ">
+                <i class="bi bi-save"></i>
+                Save Annotation
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- Left Panel -->
+        <div class="flex-1 bg-white p-6 flex flex-col">
+            <!-- Upload Section -->
+            <div class="mb-6">
+                <label for="fileInput" class="inline-flex items-center gap-2 px-5 py-3 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-pointer ">
+                    <i class="bi bi-file-earmark-play"></i>
+                    Select Audio File
+                </label>
+            </div>
+
+            <!-- Video Container - Larger -->
+            <div id="videoContainer" class="w-full h-96 md:h-[500px] bg-black rounded-lg mb-6 flex items-center justify-center relative overflow-hidden cursor-pointer">
+                <video id="videoPlayer" controls class="w-full h-full object-contain hidden"></video>
+                <div id="videoPlaceholder" class="text-gray-400 text-lg">
+                    Uploaded Video
+                </div>
+            </div>
+
+            <!-- Controls Bar - Wider and Centered -->
+            <div class="flex items-center justify-center gap-6 mb-6 px-4">
+                <button id="playPauseBtn" class="w-12 h-12 border border-gray-300 rounded-lg bg-white flex items-center justify-center  text-gray-700">
+                    <i class="bi bi-play-fill text-xl"></i>
+                </button>
+
+                <div class="flex items-center gap-3">
+                    <button id="seekBackBtn" class="w-10 h-10 border border-gray-300 rounded-lg bg-white flex items-center justify-center  text-gray-700">
+                        <i class="bi bi-skip-start-fill"></i>
+                    </button>
+                    <span class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs text-gray-600">-10s</span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button id="seekForwardBtn" class="w-10 h-10 border border-gray-300 rounded-lg bg-white flex items-center justify-center hover:bg-gray-50 text-gray-700">
+                        <i class="bi bi-skip-end-fill"></i>
+                    </button>
+                    <span class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs text-gray-600">+10s</span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-xs text-gray-600">Speed</span>
+                    <select id="speedSelect" class="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="0.5">0.5x</option>
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2x</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Timeline with Moving Progress Line -->
+            <div class="mb-4">
+                <div class="relative">
+                    <div id="timeline" class="w-full h-6 bg-gray-200 rounded-full cursor-pointer overflow-hidden relative">
+                        <div id="timelineProgress" class="timeline-progress absolute top-0 left-0 w-0"></div>
+                        <div id="progressLine" class="progress-line" style="left: 0%"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center mt-2 text-sm text-gray-600">
+                    <span id="currentTime">00:00</span>
+                    <span id="duration">00:00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Annotation Tools -->
+        <div class="w-96 bg-white border-l border-gray-200 flex flex-col">
+            <div class="bg-gray-200 px-5 py-4 border-b border-gray-300">
+                <div class="flex items-center gap-2 text-gray-900 font-semibold">
+                    <i class="bi bi-x text-lg"></i>
+                    Annotation Tools
+                </div>
+            </div>
+            
+            <div class="flex-1 p-6 overflow-y-auto">
+                <!-- Event Types Section -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Events Types</h3>
+                    <div id="eventList" class="border border-gray-700">
+                        <div class="event-item flex items-center justify-start gap-3 p-3 border-b border-gray-700 bg-white cursor-pointer hover:bg-gray-50 last:border-b-0" data-event="Scene Change">
+                            <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+                            </svg>
+                            <span class="font-medium text-sm">Scene Change</span>
+                        </div>
+
+                        <div class="event-item flex items-center justify-start gap-3 p-3 border-b border-gray-700 bg-white cursor-pointer hover:bg-gray-50 last:border-b-0" data-event="Dialogue">
+                            <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 14H6v-2h2v2zm0-3H6V9h2v2zm0-3H6V6h2v2zm7 6h-2v-2h2v2zm0-3h-2V9h2v2zm0-3h-2V6h2v2z"/>
+                            </svg>
+                            <span class="font-medium text-sm">Dialogue</span>
+                        </div>
+
+                        <div class="event-item flex items-center justify-start gap-3 p-3 border-b border-gray-700 bg-white cursor-pointer hover:bg-gray-50 last:border-b-0" data-event="Action Sequence">
+                            <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 2v11h3v9l7-12h-4l4-8z"/>
+                            </svg>
+                            <span class="font-medium text-sm">Action Sequence</span>
+                        </div>
+
+                        <div class="event-item flex items-center justify-start gap-3 p-3 bg-white cursor-pointer hover:bg-gray-50" data-event="Transition">
+                            <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/>
+                            </svg>
+                            <span class="font-medium text-sm">Transition</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tracking Controls Section -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Tracking Controls</h3>
+                    <div class="border border-gray-700">
+                        <button class="tracking-btn w-full flex items-center justify-start gap-3 p-3 border-b border-gray-700 bg-white hover:bg-gray-50 last:border-b-0" data-action="start-segment">
+                            <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polygon fill="white" points="10,8 16,12 10,16"/>
+                            </svg>
+                            <span class="font-medium text-sm">Start Segment</span>
+                        </button>
+
+                        <button class="tracking-btn w-full flex items-center justify-start gap-3 p-3 border-b border-gray-700 bg-white hover:bg-gray-50 last:border-b-0" data-action="end-segment">
+                            <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 6h4v12H6V6zm8 0h4v12h-4V6z"/>
+                            </svg>
+                            <span class="font-medium text-sm">End Segment</span>
+                        </button>
+
+                        <button class="tracking-btn w-full flex items-center justify-start gap-3 p-3 bg-white hover:bg-gray-50" data-action="split-current">
+                            <svg class="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            </svg>
+                            <span class="font-medium text-sm">Split at Current Time</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Event Timeline Section -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-3">Event Timeline</h3>
+                    <div id="eventTimeline" class="bg-gray-200 p-4 rounded min-h-[100px] flex items-center justify-center text-sm text-gray-600">
+                        No event marked
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept="video/*" class="hidden">
+
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('fileInput');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const videoContainer = document.getElementById('videoContainer');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const fileName = document.getElementById('fileName');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const seekBackBtn = document.getElementById('seekBackBtn');
+        const seekForwardBtn = document.getElementById('seekForwardBtn');
+        const speedSelect = document.getElementById('speedSelect');
+        const timeline = document.getElementById('timeline');
+        const timelineProgress = document.getElementById('timelineProgress');
+        const progressLine = document.getElementById('progressLine');
+        const currentTime = document.getElementById('currentTime');
+        const duration = document.getElementById('duration');
+        const saveBtn = document.getElementById('saveBtn');
+        const eventList = document.getElementById('eventList');
+        const eventTimeline = document.getElementById('eventTimeline');
+
+        // State
+        let selectedEvent = null;
+        let events = [];
+        let currentSegmentStart = null;
+
+        // Format time helper
+        function formatTime(seconds) {
+            if (!isFinite(seconds)) return '00:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Update progress bar and moving line
+        function updateProgress() {
+            if (!videoPlayer.duration) return;
+            
+            const progress = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+            timelineProgress.style.width = progress + '%';
+            progressLine.style.left = progress + '%';
+        }
+
+        // Update event timeline display
+        function updateEventTimeline() {
+            if (events.length === 0) {
+                eventTimeline.innerHTML = '<span class="text-gray-600">No event marked</span>';
+                return;
+            }
+
+            let timelineHTML = '<div class="space-y-2">';
+            events.forEach(event => {
+                timelineHTML += `
+                    <div class="bg-white p-2 rounded border text-xs">
+                        <div class="font-medium">${event.type}</div>
+                        <div class="text-gray-500">${formatTime(event.start)} - ${formatTime(event.end)}</div>
+                    </div>
+                `;
+            });
+            timelineHTML += '</div>';
+            eventTimeline.innerHTML = timelineHTML;
+        }
+
+        // File upload handler
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                fileName.textContent = file.name;
+                const videoURL = URL.createObjectURL(file);
+                videoPlayer.src = videoURL;
+                videoPlayer.classList.remove('hidden');
+                videoPlaceholder.classList.add('hidden');
+                videoPlayer.load();
+            }
+        });
+
+        videoContainer.addEventListener('click', function() {
+            if (!videoPlayer.src) fileInput.click();
+        });
+
+        playPauseBtn.addEventListener('click', function() {
+            if (!videoPlayer.src) return;
+            if (videoPlayer.paused) {
+                videoPlayer.play();
+                playPauseBtn.innerHTML = '<i class="bi bi-pause-fill text-xl"></i>';
+            } else {
+                videoPlayer.pause();
+                playPauseBtn.innerHTML = '<i class="bi bi-play-fill text-xl"></i>';
+            }
+        });
+
+        videoPlayer.addEventListener('play', function() {
+            playPauseBtn.innerHTML = '<i class="bi bi-pause-fill text-xl"></i>';
+        });
+
+        videoPlayer.addEventListener('pause', function() {
+            playPauseBtn.innerHTML = '<i class="bi bi-play-fill text-xl"></i>';
+        });
+
+        seekBackBtn.addEventListener('click', () => {
+            if (videoPlayer.src) videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
+        });
+
+        seekForwardBtn.addEventListener('click', () => {
+            if (videoPlayer.src) videoPlayer.currentTime = Math.min(videoPlayer.duration || 0, videoPlayer.currentTime + 10);
+        });
+
+        speedSelect.addEventListener('change', function() {
+            if (videoPlayer.src) videoPlayer.playbackRate = parseFloat(this.value);
+        });
+
+        // Time update with progress animation
+        videoPlayer.addEventListener('timeupdate', function() {
+            const time = formatTime(videoPlayer.currentTime);
+            currentTime.textContent = time;
+            updateProgress();
+        });
+
+        videoPlayer.addEventListener('loadedmetadata', function() {
+            const dur = formatTime(videoPlayer.duration);
+            duration.textContent = dur;
+            updateProgress();
+        });
+
+        // Timeline click for seeking
+        timeline.addEventListener('click', function(e) {
+            if (!videoPlayer.duration) return;
+            
+            const rect = timeline.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            const timeInSeconds = percentage * videoPlayer.duration;
+            
+            videoPlayer.currentTime = timeInSeconds;
+        });
+
+        // Event selection
+        eventList.addEventListener('click', function(e) {
+            const eventItem = e.target.closest('.event-item');
+            if (eventItem) {
+                document.querySelectorAll('.event-item').forEach(item => {
+                    item.classList.remove('bg-gray-900', 'text-white');
+                    item.classList.add('bg-white', 'text-gray-700');
+                    item.querySelector('svg').classList.remove('text-white');
+                    item.querySelector('svg').classList.add('text-gray-700');
+                });
+                
+                eventItem.classList.remove('bg-white', 'text-gray-700');
+                eventItem.classList.add('bg-gray-900', 'text-white');
+                eventItem.querySelector('svg').classList.remove('text-gray-700');
+                eventItem.querySelector('svg').classList.add('text-white');
+                selectedEvent = eventItem.dataset.event;
+            }
+        });
+
+        // Tracking controls
+        document.querySelectorAll('.tracking-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const action = this.dataset.action;
+                
+                switch(action) {
+                    case 'start-segment':
+                        if (!selectedEvent) {
+                            alert('Please select an event type first');
+                            return;
+                        }
+                        if (!videoPlayer.duration) {
+                            alert('Please upload a video first');
+                            return;
+                        }
+                        currentSegmentStart = videoPlayer.currentTime;
+                        alert(`Started ${selectedEvent} segment at ${formatTime(currentSegmentStart)}`);
+                        break;
+                        
+                    case 'end-segment':
+                        if (!currentSegmentStart || !selectedEvent) {
+                            alert('Please start a segment first');
+                            return;
+                        }
+                        const segmentEnd = videoPlayer.currentTime;
+                        const newEvent = {
+                            type: selectedEvent,
+                            start: currentSegmentStart,
+                            end: segmentEnd,
+                            id: Date.now()
+                        };
+                        events.push(newEvent);
+                        updateEventTimeline();
+                        currentSegmentStart = null;
+                        alert(`Ended ${selectedEvent} segment at ${formatTime(segmentEnd)}`);
+                        break;
+                        
+                    case 'split-current':
+                        const splitTime = videoPlayer.currentTime;
+                        alert(`Split at current time: ${formatTime(splitTime)}`);
+                        break;
+                }
+            });
+        });
+
+        saveBtn.addEventListener('click', function() {
+            const annotations = {
+                videoFile: fileName.textContent,
+                duration: videoPlayer.duration || 0,
+                events: events,
+                selectedEvent: selectedEvent,
+                timestamp: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(annotations, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; 
+            a.download = 'video-events-annotations.json';
+            document.body.appendChild(a); 
+            a.click(); 
+            document.body.removeChild(a); 
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>

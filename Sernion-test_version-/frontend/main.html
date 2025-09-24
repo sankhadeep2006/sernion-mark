@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SERNION - Landing Page (Data Labeling Only)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'scale-blue': '#0066FF',
+                        'scale-dark': '#0A0A0A',
+                        'scale-gray': '#1A1A1A',
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'gradient-x': 'gradient-x 15s ease infinite',
+                        'blob': 'blob 7s infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        'gradient-x': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            },
+                        },
+                        'blob': {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --glass-bg: rgba(255,255,255,0.03);
+            --glass-border: rgba(255,255,255,0.06);
+            --glass-accent: rgba(255,255,255,0.04);
+            --glass-shadow: 0 6px 30px rgba(2,6,23,0.7);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(ellipse at center, rgba(12,12,12,1) 0%, rgba(0,0,0,1) 60%);
+            color: #fff;
+        }
+
+        /* Glassmorphism base class applied to sections and cards */
+        .glass-section {
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px) saturate(120%);
+            -webkit-backdrop-filter: blur(10px) saturate(120%);
+            box-shadow: var(--glass-shadow);
+        }
+
+        .glass-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 8px 20px rgba(2,6,23,0.6);
+        }
+
+        .glass-navbar {
+            background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            backdrop-filter: blur(8px);
+        }
+
+        .glass-cta {
+            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.07);
+            color: #fff;
+        }
+
+        /* subtle hover lift for glass elements */
+        .glass-hover:hover {
+            transform: translateY(-6px);
+            transition: transform .28s cubic-bezier(.16,.84,.44,1);
+        }
+
+        /* make buttons less harsh on glass background */
+        .btn-ghost {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            color: #fff;
+        }
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.06);
+            color: #000;
+        }
+
+        /* utility to dim heavy black backgrounds but keep glass look */
+        .glass-bg-dark {
+            background: linear-gradient(180deg, rgba(6,6,7,0.6), rgba(4,4,6,0.6));
+        }
+
+        /* gradient text tweak */
+        .gradient-text {
+            background: linear-gradient(135deg, #0066FF, #00D4FF, #7C3AED);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-x 6s ease infinite;
+        }
+
+        /* small improvements to form controls on dark glass */
+        input[type="text"], input[type="email"], select, textarea {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        /* ensure footer links are readable */
+        footer a { color: rgba(255,255,255,0.85); }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <!-- Navigation (glass) -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-navbar">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="text-4xl font-bold text-white">Sernion</div>
+                </div>
+
+                <div class="hidden lg:flex items-center justify-center flex-1">
+                    <div class="flex items-center space-x-8">
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors font-medium">Products</a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors font-medium">Leaderboards</a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors font-medium">Enterprise</a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors font-medium">Government</a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors font-medium">Customers</a>
+                        <a href="#" class="text-gray-300 hover:text-white transition-colors font-medium">Resources</a>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <a href="/frontend/signup.html" class="bg-white text-black px-6 py-2 rounded-full font-medium hover:bg-gray-100 transition-all">
+                        Signup
+                    </a>
+                    <a href="/frontend/login.html" class="text-gray-300 hover:text-white transition-colors font-medium hover:bg-black-100">Log In</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section (glass) -->
+    <section class="relative min-h-screen flex items-center pt-20 glass-section glass-bg-dark">
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="space-y-8">
+                    <h1 class="text-5xl md:text-6xl lg:text-7xl font-normal leading-[1.1] text-white tracking-tight">
+                        Your Data, Accurately Labeled<br>
+                        Ready for AI
+                    </h1>
+                    <p class="text-lg md:text-xl text-gray-300 leading-relaxed max-w-xl font-normal">
+                        Supercharge your AI models with high-quality, human-verified data annotation — fast, scalable, and ethical.
+                    </p>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 pt-4">
+                        <button class="bg-white text-black px-7 py-3 rounded-full font-medium text-base hover:bg-gray-100 transition-all inline-flex items-center space-x-2">
+                            <span>Book a Demo</span>
+                            <span>→</span>
+                        </button>
+                        <button class="text-white font-medium text-base hover:text-gray-300 transition-all inline-flex items-center space-x-2 underline underline-offset-4 decoration-1">
+                            <span>Build AI</span>
+                            <span>→</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- <div class="relative flex justify-center lg:justify-end">
+                    <div class="w-96 h-96 lg:w-[500px] lg:h-[500px] relative">
+                        <div class="absolute inset-0 scale-blob glass-card rounded-full animate-blob"></div>
+                    </div>
+                </div> -->
+                <!-- <script type="module" src="https://unpkg.com/@splinetool/viewer@1.10.57/build/spline-viewer.js"></script> -->
+                <!-- <spline-viewer url="https://prod.spline.design/YYSeAFIosb-wciiL/scene.splinecode"></spline-viewer> -->
+
+
+
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Who We Help Section -->
+    <section class="py-20 md:py-24 glass-section">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-light text-white mb-6 tracking-tight">
+                    Who We Help
+                </h2>
+                <p class="text-xl md:text-2xl text-gray-300 font-light italic">
+                    "We partner with teams building tomorrow's AI."
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+                <div class="space-y-3 glass-card p-6 rounded-xl glass-hover">
+                    <h3 class="text-xl font-medium text-white">Computer Vision</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Object Detection, Segmentation</p>
+                </div>
+
+                <div class="space-y-3 glass-card p-6 rounded-xl glass-hover">
+                    <h3 class="text-xl font-medium text-white">NLP</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">NER, Sentiment, Text Classification</p>
+                </div>
+
+                <div class="space-y-3 glass-card p-6 rounded-xl glass-hover">
+                    <h3 class="text-xl font-medium text-white">Satellite / Drone Imaging</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Geospatial analysis and aerial intelligence</p>
+                </div>
+
+                <div class="space-y-3 glass-card p-6 rounded-xl glass-hover">
+                    <h3 class="text-xl font-medium text-white">Security & Surveillance</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Advanced monitoring and threat detection</p>
+                </div>
+
+                <div class="space-y-3 glass-card p-6 rounded-xl glass-hover">
+                    <h3 class="text-xl font-medium text-white">Medical Imaging</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Healthcare diagnostics and analysis</p>
+                </div>
+
+                <div class="space-y-3 glass-card p-6 rounded-xl glass-hover">
+                    <h3 class="text-xl font-medium text-white">Video Intelligence</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Real-time video processing and insights</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-16">
+                <p class="text-lg text-gray-400 font-light">Targeted Use-Cases</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- What We Offer Section -->
+    <section class="py-20 md:py-24 glass-section">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-light text-white mb-6 tracking-tight">What We Offer</h2>
+                <p class="text-xl md:text-2xl text-gray-300 font-light">Core Services</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 lg:gap-12 max-w-5xl mx-auto">
+                <div class="space-y-4 p-6 glass-card rounded-xl glass-hover">
+                    <h3 class="text-xl font-medium text-white">Image & Video Annotation</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Bounding Box, Polygon, Keypoint, Segmentation</p>
+                </div>
+
+                <div class="space-y-4 p-6 glass-card rounded-xl glass-hover">
+                    <h3 class="text-xl font-medium text-white">Text Annotation</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">NER, Intent, Classification</p>
+                </div>
+
+                <div class="space-y-4 p-6 glass-card rounded-xl glass-hover">
+                    <h3 class="text-xl font-medium text-white">Audio & Speech Labeling</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Comprehensive audio processing and speech recognition services</p>
+                </div>
+
+                <div class="space-y-4 p-6 glass-card rounded-xl glass-hover">
+                    <h3 class="text-xl font-medium text-white">Multi-layered Quality Review</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Rigorous quality assurance and validation processes</p>
+                </div>
+            </div>
+
+            <div class="mt-12 text-center">
+                <div class="inline-block p-6 glass-card rounded-xl">
+                    <h3 class="text-xl font-medium text-white mb-3">API Integration & Secure File Uploads</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Seamless integration with enterprise-grade security</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-16">
+                <button class="bg-white text-black px-8 py-4 rounded-full font-medium text-base hover:bg-gray-100 transition-all inline-flex items-center space-x-2 shadow-lg">
+                    <span>Explore Our Services</span>
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Choose Sernion Section -->
+    <section class="py-20 md:py-24 glass-section">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-light text-white mb-8 tracking-tight">Why Choose Sernion?</h2>
+                <p class="text-xl md:text-2xl text-gray-300 font-light italic max-w-3xl mx-auto">"Unlike gig platforms, we invest in training and accountability."</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="p-6 glass-card rounded-xl glass-hover">
+                    <h3 class="text-xl font-semibold text-white mb-3">Human-in-the-loop</h3>
+                    <p class="text-gray-400">Expert-reviewed annotations for maximum accuracy</p>
+                </div>
+
+                <div class="p-6 glass-card rounded-xl glass-hover">
+                    <h3 class="text-xl font-semibold text-white mb-3">Custom Workflows</h3>
+                    <p class="text-gray-400">Adaptable to your ML pipeline</p>
+                </div>
+
+                <div class="p-6 glass-card rounded-xl glass-hover">
+                    <h3 class="text-xl font-semibold text-white mb-3">Data Security</h3>
+                    <p class="text-gray-400">100% secure, no 3rd-party data sharing</p>
+                </div>
+
+                <div class="p-6 glass-card rounded-xl glass-hover">
+                    <h3 class="text-xl font-semibold text-white mb-3">Scalable Workforce</h3>
+                    <p class="text-gray-400">Ramp up quickly for large projects</p>
+                </div>
+
+                <div class="p-6 glass-card rounded-xl glass-hover">
+                    <h3 class="text-xl font-semibold text-white mb-3">Skilled Annotators</h3>
+                    <p class="text-gray-400">In-house trained, ethically employed teams</p>
+                </div>
+
+                <div class="p-6 glass-card rounded-xl text-center">
+                    <h3 class="text-xl font-semibold text-white mb-3">Ready to Get Started?</h3>
+                    <button class="bg-white text-black px-6 py-3 rounded-full font-medium text-sm hover:bg-gray-100 transition-all inline-flex items-center space-x-2">
+                        <span>Contact Us</span>
+                        <span>→</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-16 text-center">
+                <div class="inline-block p-6 glass-card rounded-xl">
+                    <p class="text-gray-300 text-lg font-medium">Trusted by ML teams building the future of AI</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Table (glass) -->
+    <!-- <section class="py-20 glass-section">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-light text-white mb-8 tracking-tight">Why Choose Sernion?</h2>
+                <p class="text-xl md:text-2xl text-gray-300 font-light italic">"Unlike gig platforms, we invest in training and accountability."</p>
+            </div>
+
+            <div class="overflow-hidden border border-gray-800/50 rounded-xl glass-card">
+                <div class="bg-gray-900/10 p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
+                        <div class="p-4 text-center border-b md:border-b-0 md:border-r border-gray-800/50">
+                            <h3 class="text-lg font-semibold text-white">Feature</h3>
+                        </div>
+                        <div class="p-4 text-center border-b md:border-b-0 border-gray-800/50">
+                            <h3 class="text-lg font-semibold text-white">Description</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divide-y divide-gray-800/50">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-0 hover:bg-gray-900/10 transition-colors">
+                        <div class="p-6 border-b md:border-b-0 md:border-r border-gray-800/50">
+                            <h4 class="text-white font-medium">Human-in-the-loop</h4>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-400">Expert-reviewed annotations for maximum accuracy</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-0 hover:bg-gray-900/10 transition-colors">
+                        <div class="p-6 border-b md:border-b-0 md:border-r border-gray-800/50">
+                            <h4 class="text-white font-medium">Custom Workflows</h4>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-400">Adaptable to your ML pipeline</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-0 hover:bg-gray-900/10 transition-colors">
+                        <div class="p-6 border-b md:border-b-0 md:border-r border-gray-800/50">
+                            <h4 class="text-white font-medium">Data Security</h4>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-400">100% secure, no 3rd-party data sharing</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-0 hover:bg-gray-900/10 transition-colors">
+                        <div class="p-6 border-b md:border-b-0 md:border-r border-gray-800/50">
+                            <h4 class="text-white font-medium">Scalable Workforce</h4>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-400">Ramp up quickly for large projects</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-0 hover:bg-gray-900/10 transition-colors">
+                        <div class="p-6 md:border-r border-gray-800/50">
+                            <h4 class="text-white font-medium">Skilled Annotators</h4>
+                        </div>
+                        <div class="p-6">
+                            <p class="text-gray-400">In-house trained, ethically employed teams</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-12">
+                <button class="bg-white text-black px-8 py-4 rounded-full font-medium text-base hover:bg-gray-100 transition-all inline-flex items-center space-x-2 shadow-lg">
+                    <span>Start Your Project</span>
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- Proof of Impact -->
+    <section class="py-20 glass-section">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-light text-white mb-6 tracking-tight">Proof of Impact</h2>
+                <p class="text-lg text-gray-400 max-w-2xl mx-auto">Delivering measurable results with enterprise-grade reliability and ethical standards</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-16">
+                <div class="text-center p-8 glass-card rounded-xl glass-hover">
+                    <div class="mb-4">
+                        <div class="text-4xl md:text-5xl font-bold text-white mb-2">98.7%</div>
+                        <div class="text-sm text-gray-500 uppercase tracking-wider font-medium">ACCURACY RATE</div>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Annotation Precision</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Consistent accuracy across Computer Vision and NLP projects with rigorous quality control</p>
+                </div>
+
+                <div class="text-center p-8 glass-card rounded-xl glass-hover">
+                    <div class="mb-4">
+                        <div class="text-4xl md:text-5xl font-bold text-white mb-2">10,000+</div>
+                        <div class="text-sm text-gray-500 uppercase tracking-wider font-medium">DAILY OUTPUT</div>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Scalable Delivery</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">High-volume label production with 100% SLA compliance and zero missed deadlines</p>
+                </div>
+
+                <div class="text-center p-8 glass-card rounded-xl glass-hover">
+                    <div class="mb-4">
+                        <div class="text-4xl md:text-5xl font-bold text-white mb-2">100%</div>
+                        <div class="text-sm text-gray-500 uppercase tracking-wider font-medium">ETHICAL EMPLOYMENT</div>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Responsible Operations</h3>
+                    <p class="text-gray-400 text-base leading-relaxed">Direct employment model ensuring fair wages, benefits, and career development</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+                <div class="p-6 glass-card rounded-xl">
+                    <h3 class="text-xl font-semibold text-white mb-4">Quality Assurance Framework</h3>
+                    <ul class="space-y-3 text-gray-400">
+                        <li class="flex items-start"><span class="w-2 h-2 bg-gray-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>Multi-tier review process with expert validation</li>
+                        <li class="flex items-start"><span class="w-2 h-2 bg-gray-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>Real-time quality monitoring and feedback loops</li>
+                        <li class="flex items-start"><span class="w-2 h-2 bg-gray-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>Continuous improvement through data-driven insights</li>
+                    </ul>
+                </div>
+
+                <div class="p-6 glass-card rounded-xl">
+                    <h3 class="text-xl font-semibold text-white mb-4">Operational Excellence</h3>
+                    <ul class="space-y-3 text-gray-400">
+                        <li class="flex items-start"><span class="w-2 h-2 bg-gray-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>Enterprise-grade security and data protection</li>
+                        <li class="flex items-start"><span class="w-2 h-2 bg-gray-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>24/7 project management and client support</li>
+                        <li class="flex items-start"><span class="w-2 h-2 bg-gray-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>Transparent reporting and progress tracking</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center glass-card rounded-xl p-8">
+                <blockquote class="text-xl md:text-2xl text-gray-300 font-light italic mb-6 max-w-4xl mx-auto">"Sernion's commitment to quality and ethical practices sets them apart in the annotation industry. Their consistent delivery and attention to detail have been instrumental in our AI development success."</blockquote>
+                <div class="text-gray-400">
+                    <div class="font-medium">ML Engineering Lead</div>
+                    <div class="text-sm">Fortune 500 Technology Company</div>
+                </div>
+            </div>
+
+            <div class="text-center mt-12">
+                <button class="bg-white text-black px-8 py-4 rounded-full font-medium text-base hover:bg-gray-100 transition-all inline-flex items-center space-x-2 shadow-lg">
+                    <span>Request Case Studies</span>
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pilot Offer -->
+    <section class="py-20 md:py-24 glass-section">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <div class="inline-block px-4 py-2 bg-red-500/10 backdrop-filter backdrop-blur-md border border-red-500/20 rounded-full mb-6 shadow-lg shadow-red-500/5">
+                    <span class="text-red-400 text-sm font-medium uppercase tracking-wider">Limited Time Offer</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-light text-white mb-6 tracking-tight">Start Your AI Journey with Sernion</h2>
+                <p class="text-xl text-gray-300/90 font-light max-w-3xl mx-auto">Experience our annotation quality firsthand with a complimentary pilot project</p>
+            </div>
+
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 mb-8 glass-card">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="space-y-6">
+                        <div class="space-y-4">
+                            <h3 class="text-2xl md:text-3xl font-semibold text-white">Free Pilot Project</h3>
+                            <p class="text-lg text-gray-300/90 leading-relaxed">Upload your dataset and receive 500 professionally labeled samples at no cost. Perfect for evaluating our quality standards and workflow integration.</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <h4 class="text-lg font-semibold text-white">What's Included:</h4>
+                            <ul class="space-y-3 text-gray-300/90">
+                                <li class="flex items-start"><span class="w-2 h-2 bg-red-400/80 rounded-full mt-2 mr-3 flex-shrink-0"></span>500 high-quality labeled samples</li>
+                                <li class="flex items-start"><span class="w-2 h-2 bg-red-400/80 rounded-full mt-2 mr-3 flex-shrink-0"></span>Multi-tier quality review process</li>
+                                <li class="flex items-start"><span class="w-2 h-2 bg-red-400/80 rounded-full mt-2 mr-3 flex-shrink-0"></span>Custom annotation guidelines</li>
+                                <li class="flex items-start"><span class="w-2 h-2 bg-red-400/80 rounded-full mt-2 mr-3 flex-shrink-0"></span>Detailed quality report</li>
+                                <li class="flex items-start"><span class="w-2 h-2 bg-red-400/80 rounded-full mt-2 mr-3 flex-shrink-0"></span>Direct consultation with our experts</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="text-center space-y-6">
+                        <div class="p-6 glass-card rounded-xl">
+                            <div class="text-3xl font-bold text-red-400 mb-2">₹0</div>
+                            <div class="text-gray-400/90 text-sm mb-4">Usually ₹50,499 value</div>
+                            <div class="text-white/90 font-medium">No commitment required</div>
+                        </div>
+
+                        <button class="w-full bg-red-600/90 hover:bg-red-500/90 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-red-500/30 backdrop-filter backdrop-blur-sm border border-red-500/20">
+                            Start Free Pilot Project
+                        </button>
+
+                        <p class="text-sm text-gray-400/90">Secure upload • 48-hour turnaround • No strings attached</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <div class="text-center space-y-4 p-6 glass-card rounded-xl">
+                    <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mx-auto border border-green-500/10">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17,8 12,3 7,8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    </div>
+                    <h4 class="text-lg font-semibold text-white/90">Upload Dataset</h4>
+                    <p class="text-gray-400/90 text-sm">Securely upload your data through our enterprise-grade platform</p>
+                </div>
+
+                <div class="text-center space-y-4 p-6 glass-card rounded-xl">
+                    <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mx-auto border border-green-500/10">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </div>
+                    <h4 class="text-lg font-semibold text-white/90">Expert Review</h4>
+                    <p class="text-gray-400/90 text-sm">Our trained annotators process your samples with precision</p>
+                </div>
+
+                <div class="text-center space-y-4 p-6 glass-card rounded-xl">
+                    <div class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mx-auto border border-green-500/10">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7,10 12,15 17,10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    </div>
+                    <h4 class="text-lg font-semibold text-white/90">Receive Results</h4>
+                    <p class="text-gray-400/90 text-sm">Get labeled data with detailed quality metrics and insights</p>
+                </div>
+            </div>
+
+            <div class="text-center space-y-6 p-6 glass-card rounded-xl">
+                <div class="flex flex-wrap justify-center items-center gap-8 text-gray-400/90 text-sm">
+                    <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-red-500/80 rounded-full"></span><span>Enterprise Security</span></div>
+                    <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-red-400/80 rounded-full"></span><span>GDPR Compliant</span></div>
+                    <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-red-400/80 rounded-full"></span><span>ISO 27001 Certified</span></div>
+                    <div class="flex items-center space-x-2"><span class="w-2 h-2 bg-red-400/80 rounded-full"></span><span>99.9% Uptime SLA</span></div>
+                </div>
+
+                <p class="text-gray-400/90 text-sm max-w-2xl mx-auto mt-4">Join 200+ ML teams who have accelerated their AI development with Sernion's annotation services. No credit card required.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Secondary Pilot Offer (already glass-like) -->
+    <!-- <section class="py-16 glass-section">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-8 md:p-12 glass-card">
+                <div class="text-center space-y-8">
+                    <div class="space-y-4">
+                        <div class="inline-block px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
+                            <span class="text-green-400/90 text-xs font-medium uppercase tracking-wider">Free Trial</span>
+                        </div>
+                        <h2 class="text-2xl md:text-3xl lg:text-4xl font-light text-white/95 tracking-tight">Experience Sernion Quality</h2>
+                        <p class="text-lg text-gray-300/90 max-w-2xl mx-auto">Upload your dataset and receive 500 professionally labeled samples — completely free</p>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-6 text-center">
+                        <div class="space-y-2 p-4 glass-card rounded-xl">
+                            <div class="text-2xl font-bold text-green-400/90">500</div>
+                            <div class="text-sm text-gray-400/90">Free Labels</div>
+                        </div>
+                        <div class="space-y-2 p-4 glass-card rounded-xl">
+                            <div class="text-2xl font-bold text-green-400/90">48h</div>
+                            <div class="text-sm text-gray-400/90">Turnaround</div>
+                        </div>
+                        <div class="space-y-2 p-4 glass-card rounded-xl">
+                            <div class="text-2xl font-bold text-green-400/90">98.7%</div>
+                            <div class="text-sm text-gray-400/90">Accuracy</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <button class="bg-green-500/90 hover:bg-green-600/90 text-black px-8 py-4 rounded-full font-semibold text-lg transition-all transform hover:scale-105 shadow-lg border border-green-500/20">
+                            Start Free Pilot Project
+                        </button>
+                        <p class="text-sm text-gray-400/90">No commitment • Secure upload • Enterprise-grade quality</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    <!-- Contact Form (glass) -->
+    <section class="bg-black py-20 md:py-24">
+  <div class="max-w-4xl mx-auto px-6">
+      <!-- Section Header -->
+      <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl lg:text-5xl font-light text-white mb-6 tracking-tight">
+              Let's Talk About Your Data
+          </h2>
+          <p class="text-lg text-gray-300 max-w-2xl mx-auto">
+              Ready to accelerate your AI development? Share your project details and we'll get back to you within 24 hours.
+          </p>
+      </div>
+      
+      <!-- Contact Form -->
+      <div class="bg-gray-900/30 border border-gray-800/50 rounded-2xl p-8 md:p-12">
+          <form class="space-y-6">
+              <!-- Name & Email Row -->
+              <div class="grid md:grid-cols-2 gap-6">
+                  <div class="space-y-2">
+                      <label for="name" class="block text-sm font-medium text-gray-300">
+                          Name *
+                      </label>
+                      <input 
+                          type="text" 
+                          id="name" 
+                          name="name" 
+                          required
+                          class="w-full px-4 py-3 bg-black border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                          placeholder="Your full name"
+                      >
+                  </div>
+                  
+                  <div class="space-y-2">
+                      <label for="email" class="block text-sm font-medium text-gray-300">
+                          Email *
+                      </label>
+                      <input 
+                          type="email" 
+                          id="email" 
+                          name="email" 
+                          required
+                          class="w-full px-4 py-3 bg-black border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                          placeholder="your.email@company.com"
+                      >
+                  </div>
+              </div>
+              
+              <!-- Company -->
+              <div class="space-y-2">
+                  <label for="company" class="block text-sm font-medium text-gray-300">
+                      Company
+                  </label>
+                  <input 
+                      type="text" 
+                      id="company" 
+                      name="company"
+                      class="w-full px-4 py-3 bg-black border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                      placeholder="Your organization"
+                  >
+              </div>
+              
+              <!-- Project Type & Dataset Size Row -->
+              <div class="grid md:grid-cols-2 gap-6">
+                  <div class="space-y-2">
+                      <label for="project-type" class="block text-sm font-medium text-gray-300">
+                          Project Type *
+                      </label>
+                      <select 
+                          id="project-type" 
+                          name="project-type" 
+                          required
+                          class="w-full px-4 py-3 bg-black border border-gray-700/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                      >
+                          <option value="">Select project type</option>
+                          <option value="computer-vision">Computer Vision</option>
+                          <option value="nlp">Natural Language Processing</option>
+                          <option value="audio-speech">Audio & Speech</option>
+                          <option value="satellite-drone">Satellite/Drone Imaging</option>
+                          <option value="medical-imaging">Medical Imaging</option>
+                          <option value="security-surveillance">Security & Surveillance</option>
+                          <option value="video-intelligence">Video Intelligence</option>
+                          <option value="other">Other</option>
+                      </select>
+                  </div>
+                  
+                  <div class="space-y-2">
+                      <label for="dataset-size" class="block text-sm font-medium text-gray-300">
+                          Dataset Size
+                      </label>
+                      <select 
+                          id="dataset-size" 
+                          name="dataset-size"
+                          class="w-full px-4 py-3 bg-black border border-gray-700/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
+                      >
+                          <option value="">Select dataset size</option>
+                          <option value="small">< 1,000 samples</option>
+                          <option value="medium">1,000 - 10,000 samples</option>
+                          <option value="large">10,000 - 100,000 samples</option>
+                          <option value="enterprise">100,000+ samples</option>
+                          <option value="unknown">Not sure yet</option>
+                      </select>
+                  </div>
+              </div>
+              
+              <!-- Message -->
+              <div class="space-y-2">
+                  <label for="message" class="block text-sm font-medium text-gray-300">
+                      Project Details
+                  </label>
+                  <textarea 
+                      id="message" 
+                      name="message" 
+                      rows="4"
+                      class="w-full px-4 py-3 bg-black border border-gray-700/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all resize-vertical"
+                      placeholder="Tell us about your project requirements, timeline, and any specific challenges you're facing..."
+                  ></textarea>
+              </div>
+              
+              <!-- CTAs -->
+              <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                  <button 
+                      type="submit" 
+                      name="action" 
+                      value="callback"
+                      class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold text-base transition-all transform hover:scale-105 shadow-lg hover:shadow-blue-600/25"
+                  >
+                      Request Callback
+                  </button>
+                  
+                  <button 
+                      type="submit" 
+                      name="action" 
+                      value="intro-call"
+                      class="flex-1 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-semibold text-base transition-all transform hover:scale-105 shadow-lg hover:shadow-green-600/25"
+                  >
+                      Book Intro Call
+                  </button>
+              </div>
+              
+              <!-- Privacy Notice -->
+              <div class="text-center pt-4">
+                  <p class="text-sm text-gray-400">
+                      By submitting this form, you agree to our 
+                      <a href="#" class="text-blue-400 hover:text-blue-300 underline">Privacy Policy</a>. 
+                      We'll never share your information with third parties.
+                  </p>
+              </div>
+          </form>
+      </div>
+      
+      <!-- Alternative Contact Methods -->
+      <div class="mt-12 grid md:grid-cols-3 gap-6 text-center">
+          <div class="p-6 border border-gray-800/50 rounded-xl hover:border-gray-700/50 transition-all">
+              <h4 class="text-lg font-semibold text-white mb-2">Quick Response</h4>
+              <p class="text-gray-400 text-sm mb-4">Need immediate assistance?</p>
+              <a href="mailto:hello@sernion.ai" class="text-blue-400 hover:text-blue-300 font-medium">
+                  hello@sernion.com
+              </a>
+          </div>
+          
+          <div class="p-6 border border-gray-800/50 rounded-xl hover:border-gray-700/50 transition-all">
+              <h4 class="text-lg font-semibold text-white mb-2">Enterprise Sales</h4>
+              <p class="text-gray-400 text-sm mb-4">Large-scale projects</p>
+              <a href="tel:+91-555-SERNION" class="text-blue-400 hover:text-blue-300 font-medium">
+                  +91555SERNION
+              </a>
+          </div>
+          
+          <div class="p-6 border border-gray-800/50 rounded-xl hover:border-gray-700/50 transition-all">
+              <h4 class="text-lg font-semibold text-white mb-2">Technical Support</h4>
+              <p class="text-gray-400 text-sm mb-4">Integration questions</p>
+              <a href="mailto:support@sernion.ai" class="text-blue-400 hover:text-blue-300 font-medium">
+                  support@sernion.com
+              </a>
+          </div>
+      </div>
+  </div>
+</section>
+
+    <!-- CTA Section -->
+    <section class="py-24 md:py-32 lg:py-40 glass-section">
+        <div class="max-w-6xl mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light leading-tight text-white mb-12 tracking-tight">The future of your<br/>industry starts here</h2>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                <button class="bg-white text-black px-8 py-4 rounded-full font-medium text-base hover:bg-gray-100 transition-all inline-flex items-center space-x-2 shadow-lg">
+                    <span>Book a Demo</span>
+                    <span>→</span>
+                </button>
+                <button class="text-white font-medium text-base hover:text-gray-300 transition-all inline-flex items-center space-x-2">
+                    <span>Build AI</span>
+                    <span>→</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer (glass) -->
+    <footer class="py-16 glass-section">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-12">
+                <div class="space-y-6">
+                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">PRODUCTS</h4>
+                    <div class="space-y-4">
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Scale Data Engine</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Scale GenAI Platform</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Scale Donovan</a>
+                    </div>
+                    <div class="pt-4">
+                        <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">GOVERNMENT</h4>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Public Sector</a>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">COMPANY</h4>
+                    <div class="space-y-4">
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">About</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Careers</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Security</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Terms</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Privacy</a>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">RESOURCES</h4>
+                    <div class="space-y-4">
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Blog</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Contact Us</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Customers</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Events</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Documentation</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Guides</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Community</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">AI Readiness Report 2024</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Research</a>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">GUIDES</h4>
+                    <div class="space-y-4">
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Data Labeling</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">ML Model Training</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Diffusion Models</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Guide to AI for eCommerce</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Computer Vision Applications</a>
+                        <a href="#" class="block text-gray-300 hover:text-white transition-colors text-sm">Large Language Models</a>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">FOLLOW US</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800/50 mt-12 pt-8 flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+                <div class="text-gray-400 text-sm">Copyright © 2025 Sernion, Inc. All rights reserved.</div>
+                <div class="text-gray-400 text-sm">
+                    <a href="#" class="hover:text-white transition-colors">Terms of Use</a>
+                    <span class="mx-2">&</span>
+                    <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Add smooth interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.glass-card, .glass-hover');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() { this.style.transform = 'translateY(-6px)'; });
+                card.addEventListener('mouseleave', function() { this.style.transform = 'translateY(0)'; });
+            });
+
+            // simple button press animation
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => { this.style.transform = 'scale(1)'; }, 120);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Text Classification</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Include mammoth.js for DOCX support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen overflow-x-hidden">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center p-5 bg-white shadow-sm sticky top-0 z-50">
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 bg-gray-600 rounded flex items-center justify-center text-white text-xs font-bold">T</div>
+      <div>
+        <div id="pageTitle" class="text-2xl font-semibold text-gray-800">Text.txt</div>
+        <div class="text-gray-500 text-sm mt-1">Text Classification</div>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button
+        class="px-4 py-2 border border-gray-300 bg-white rounded-lg cursor-pointer text-base flex items-center gap-2 hover:bg-gray-100 transition-colors"
+        onclick="goBack()">← Back to project</button>
+      <button
+        class="px-4 py-2 border border-gray-900 bg-gray-900 text-white rounded-lg cursor-pointer text-base flex items-center gap-2 hover:bg-gray-700 transition-colors"
+        onclick="saveAnnotation()">🔒 Save Annotation</button>
+    </div>
+  </div>
+
+  <!-- Main Content Container -->
+  <div class="flex flex-col lg:flex-row gap-6 p-5">
+    
+    <!-- Text Area Left -->
+    <div class="flex-1 lg:max-w-[calc(100vw-450px)]">
+      <div class="bg-white border border-gray-300 rounded-xl p-8 min-h-[85vh] flex flex-col">
+        
+        <!-- File Upload Status -->
+        <div class="uploaded-file hidden p-5 bg-green-50 border border-green-200 rounded mb-4" id="uploadedFile">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-semibold text-green-700" id="fileName"></div>
+              <div class="text-sm text-green-600 mt-1" id="fileDetails"></div>
+            </div>
+            <button onclick="clearFile()" class="text-red-500 hover:text-red-700 text-sm font-medium">✕ Clear</button>
+          </div>
+        </div>
+
+        <!-- Upload Area -->
+        <div
+          id="uploadArea"
+          class="upload-area border-2 border-dashed border-gray-300 rounded-xl flex flex-col justify-center items-center hover:border-blue-400 hover:bg-blue-50 flex-1 cursor-pointer transition-all duration-200"
+          onclick="document.getElementById('fileInput').click()">
+          <div class="text-6xl mb-4 text-gray-300">📄</div>
+          <div class="text-lg text-gray-500 mb-3">Text box</div>
+          <p class="text-gray-400 text-sm text-center">
+            Click here to upload a text file<br>
+            <span class="text-xs text-gray-300">Supported formats: .txt, .doc, .docx</span>
+          </p>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden flex items-center justify-center gap-2 text-blue-600 mt-4">
+          <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          <span>Processing file...</span>
+        </div>
+
+        <!-- Text Content Area -->
+        <textarea
+          id="textContent"
+          class="text-content hidden flex-1 border border-gray-300 rounded-lg p-4 outline-none text-base leading-relaxed resize-none mt-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+          placeholder="Your text content will appear here..."></textarea>
+        
+        <input type="file" id="fileInput" class="file-input hidden" accept=".txt,.doc,.docx" onchange="handleFileUpload(event)" />
+
+        <!-- Current Classification Display -->
+        <div id="currentClassificationDisplay" class="hidden mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm text-blue-600 mb-1">Current Classification:</div>
+              <div id="currentClassification" class="font-semibold text-blue-800 text-lg capitalize"></div>
+            </div>
+            <button onclick="clearCurrentClassification()" class="text-red-500 hover:text-red-700 text-sm">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Right - Fixed Width -->
+    <div class="w-full lg:w-[420px] lg:flex-shrink-0">
+      
+      <!-- Annotation Tools Frame -->
+      <div class="bg-blue-50 border border-blue-100 rounded-2xl p-7 mb-1">
+        <div class="flex items-center gap-3 pb-4 border-b border-blue-100 mb-1">
+          <!-- SVG ICON -->
+          <svg class="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"></path>
+            <circle cx="8" cy="9" r="1"></circle>
+            <circle cx="12" cy="9" r="1"></circle>
+            <circle cx="16" cy="9" r="1"></circle>
+          </svg>
+          <span class="font-semibold text-gray-800 text-lg">Annotation Tools</span>
+        </div>
+        
+        <div>
+          <div class="text-base font-semibold text-gray-700 mb-1">Identify Entities</div>
+          
+          <button
+            class="entity-btn w-full py-3 px-5 mb-1 bg-white text-gray-700 border-2 border-gray-300 text-base rounded-lg hover:bg-gray-50 transition-all duration-200"
+            id="btn-business"
+            data-entity="business"
+            onclick="selectEntity(this, 'business')">
+            Business
+          </button>
+          
+          <button
+            class="entity-btn w-full py-3 px-5 mb-1 bg-white text-gray-700 border-2 border-gray-300 text-base rounded-lg hover:bg-gray-50 transition-all duration-200"
+            id="btn-sports"
+            data-entity="sports"
+            onclick="selectEntity(this, 'sports')">
+            Sports
+          </button>
+          
+          <button
+            class="entity-btn w-full py-3 px-5 mb-1 bg-white text-gray-700 border-2 border-gray-300 text-base rounded-lg hover:bg-gray-50 transition-all duration-200"
+            id="btn-politics"
+            data-entity="politics"
+            onclick="selectEntity(this, 'politics')">
+            Politics
+          </button>
+          
+          <button
+            class="entity-btn w-full py-3 px-5 mb-1 bg-white text-gray-700 border-2 border-gray-300 text-base rounded-lg hover:bg-gray-50 transition-all duration-200"
+            id="btn-technology"
+            data-entity="technology"
+            onclick="selectEntity(this, 'technology')">
+            Technology
+          </button>
+          
+          <div class="border-t border-blue-100 pt-4 mt-4 space-y-1">
+            <button 
+              class="action-btn w-full py-3 px-5 bg-gray-900 text-white border-2 border-gray-900 text-base rounded-lg hover:bg-gray-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+              id="annotateBtn"
+              onclick="saveCurrentClassification()"
+              disabled>
+              Save Annotation
+            </button>
+            
+            <button 
+              class="action-btn w-full py-3 px-5 bg-gray-900 text-white border-2 border-gray-900 text-base rounded-lg hover:bg-gray-700 transition-all duration-200" 
+              onclick="nextText()">
+              Next Text
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shortcuts Section -->
+      <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm mb-2">
+        <div class="text-lg font-semibold text-gray-700 mb-1">Keyboard Shortcuts</div>
+        <div class="space-y-2">
+          <div class="shortcut-item flex items-center gap-3 cursor-pointer select-none p-2 rounded hover:bg-gray-100 transition-colors"
+               id="sc-business" data-entity="business" onclick="selectShortcut(this)">
+            <div class="shortcut-key bg-gray-200 px-3 py-1 rounded text-sm font-bold min-w-[32px] text-center">1</div>
+            <span class="text-sm">Business</span>
+          </div>
+          <div class="shortcut-item flex items-center gap-3 cursor-pointer select-none p-2 rounded hover:bg-gray-100 transition-colors"
+               id="sc-sports" data-entity="sports" onclick="selectShortcut(this)">
+            <div class="shortcut-key bg-gray-200 px-3 py-1 rounded text-sm font-bold min-w-[32px] text-center">2</div>
+            <span class="text-sm">Sports</span>
+          </div>
+          <div class="shortcut-item flex items-center gap-3 cursor-pointer select-none p-2 rounded hover:bg-gray-100 transition-colors"
+               id="sc-politics" data-entity="politics" onclick="selectShortcut(this)">
+            <div class="shortcut-key bg-gray-200 px-3 py-1 rounded text-sm font-bold min-w-[32px] text-center">3</div>
+            <span class="text-sm">Politics</span>
+          </div>
+          <div class="shortcut-item flex items-center gap-3 cursor-pointer select-none p-2 rounded hover:bg-gray-100 transition-colors"
+               id="sc-technology" data-entity="technology" onclick="selectShortcut(this)">
+            <div class="shortcut-key bg-gray-200 px-3 py-1 rounded text-sm font-bold min-w-[32px] text-center">4</div>
+            <span class="text-sm">Technology</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let currentCategory = "";
+    let classifiedCount = 0;
+    let totalTexts = 200;
+    let classifications = [];
+    let currentFileName = "";
+
+    // File upload handler with enhanced DOCX support
+    async function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Validate file type
+      const allowedTypes = ['text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+      const allowedExtensions = ['.txt', '.docx', '.doc'];
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+      if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+        showNotification("Please upload a valid text file (.txt, .doc, .docx)", "error");
+        return;
+      }
+
+      // Show loading
+      showLoading(true);
+
+      try {
+        currentFileName = file.name;
+        const fileSize = (file.size / 1024).toFixed(1) + " KB";
+        
+        // Update UI
+        document.getElementById("fileName").textContent = currentFileName;
+        document.getElementById("pageTitle").textContent = currentFileName;
+        document.getElementById("fileDetails").textContent = `Size: ${fileSize} • Type: ${fileExtension.toUpperCase()}`;
+        
+        let textContent = "";
+
+        if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || fileExtension === '.docx') {
+          // Handle DOCX files using mammoth.js
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          textContent = result.value;
+          
+          if (result.messages.length > 0) {
+            console.log("DOCX conversion messages:", result.messages);
+          }
+        } else if (file.type === "application/msword" || fileExtension === '.doc') {
+          // Handle DOC files (limited support)
+          textContent = await readAsText(file);
+          // Clean up common DOC artifacts
+          textContent = textContent.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
+        } else {
+          // Handle plain text files
+          textContent = await readAsText(file);
+        }
+
+        if (!textContent || textContent.trim().length === 0) {
+          throw new Error("File appears to be empty or unreadable");
+        }
+
+        // Set the extracted text content
+        document.getElementById("textContent").value = textContent;
+        showFileUploaded();
+        showNotification("File uploaded successfully!", "success");
+        
+      } catch (error) {
+        console.error("Error processing file:", error);
+        showNotification(`Error processing file: ${error.message}. Please try again.`, "error");
+        clearFile();
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Helper function to read file as text
+    function readAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsText(file);
+      });
+    }
+
+    function showFileUploaded() {
+      document.getElementById("uploadedFile").classList.remove("hidden");
+      document.getElementById("uploadArea").classList.add("hidden");
+      document.getElementById("textContent").classList.remove("hidden");
+    }
+
+    function showLoading(show) {
+      const loading = document.getElementById("loadingIndicator");
+      if (show) {
+        loading.classList.remove("hidden");
+      } else {
+        loading.classList.add("hidden");
+      }
+    }
+
+    function clearFile() {
+      document.getElementById("uploadedFile").classList.add("hidden");
+      document.getElementById("uploadArea").classList.remove("hidden");
+      document.getElementById("textContent").classList.add("hidden");
+      document.getElementById("textContent").value = "";
+      document.getElementById("currentClassificationDisplay").classList.add("hidden");
+      document.getElementById("fileInput").value = "";
+      document.getElementById("pageTitle").textContent = "Text.txt";
+      currentFileName = "";
+      clearCurrentClassification();
+    }
+
+    // Entity selection - Fixed function name to match onclick
+    function selectEntity(button, category) {
+      // Remove selection from all buttons
+      document.querySelectorAll(".entity-btn").forEach((b) => {
+        b.classList.remove("bg-blue-600", "border-blue-600", "text-white");
+        b.classList.add("bg-white", "border-gray-300", "text-gray-700");
+      });
+
+      // Highlight selected button
+      button.classList.remove("bg-white", "border-gray-300", "text-gray-700");
+      button.classList.add("bg-blue-600", "border-blue-600", "text-white");
+      
+      currentCategory = category;
+      highlightShortcut(category);
+      showCurrentClassification(category);
+      
+      // Enable annotate button
+      document.getElementById("annotateBtn").disabled = false;
+      
+      showNotification(`Selected: ${category.charAt(0).toUpperCase() + category.slice(1)}`, "info");
+    }
+
+    function showCurrentClassification(category) {
+      document.getElementById("currentClassification").textContent = category;
+      document.getElementById("currentClassificationDisplay").classList.remove("hidden");
+    }
+
+    function clearCurrentClassification() {
+      currentCategory = "";
+      document.getElementById("currentClassificationDisplay").classList.add("hidden");
+      document.getElementById("annotateBtn").disabled = true;
+      
+      // Reset all buttons to original state
+      document.querySelectorAll(".entity-btn").forEach((b) => {
+        b.classList.remove("bg-blue-600", "border-blue-600", "text-white");
+        b.classList.add("bg-white", "border-gray-300", "text-gray-700");
+      });
+      
+      // Reset shortcuts
+      document.querySelectorAll(".shortcut-item").forEach((item) => {
+        item.classList.remove("bg-blue-100");
+        const key = item.querySelector(".shortcut-key");
+        key.classList.remove("bg-gray-900", "text-white");
+        key.classList.add("bg-gray-200");
+      });
+    }
+
+    // Shortcut handling
+    function selectShortcut(item) {
+      const category = item.dataset.entity;
+      const button = document.getElementById(`btn-${category}`);
+      if (button) {
+        selectEntity(button, category);
+      }
+    }
+
+    function highlightShortcut(category) {
+      // Remove highlight from all shortcuts
+      document.querySelectorAll(".shortcut-item").forEach((item) => {
+        item.classList.remove("bg-blue-100");
+        const key = item.querySelector(".shortcut-key");
+        key.classList.remove("bg-gray-900", "text-white");
+        key.classList.add("bg-gray-200");
+      });
+
+      // Highlight current shortcut
+      const currentShortcut = document.getElementById(`sc-${category}`);
+      if (currentShortcut) {
+        currentShortcut.classList.add("bg-blue-100");
+        const key = currentShortcut.querySelector(".shortcut-key");
+        key.classList.remove("bg-gray-200");
+        key.classList.add("bg-gray-900", "text-white");
+      }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      if (e.target.tagName === "TEXTAREA") return; // Don't interfere with textarea input
+      
+      const shortcuts = ["business", "sports", "politics", "technology"];
+      const keyNum = parseInt(e.key);
+      
+      if (keyNum >= 1 && keyNum <= 4) {
+        e.preventDefault();
+        const category = shortcuts[keyNum - 1];
+        const shortcut = document.getElementById(`sc-${category}`);
+        if (shortcut) {
+          selectShortcut(shortcut);
+        }
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (currentCategory) {
+          saveCurrentClassification();
+        }
+      }
+    });
+
+    // Classification functions
+    function saveCurrentClassification() {
+      if (!currentCategory) {
+        showNotification("Please select a category first!", "error");
+        return;
+      }
+      
+      const textContent = document.getElementById("textContent").value.trim();
+      if (!textContent) {
+        showNotification("Please upload a text file first!", "error");
+        return;
+      }
+
+      const classification = {
+        id: Date.now(),
+        filename: currentFileName,
+        category: currentCategory,
+        textLength: textContent.length,
+        timestamp: new Date().toISOString(),
+        preview: textContent.substring(0, 100) + (textContent.length > 100 ? "..." : "")
+      };
+
+      classifications.push(classification);
+      classifiedCount++;
+      
+      updateProgress();
+      
+      showNotification(`Text classified as ${currentCategory.charAt(0).toUpperCase() + currentCategory.slice(1)}!`, "success");
+    }
+
+    function nextText() {
+      if (!currentCategory) {
+        showNotification("Please select and save a classification first!", "error");
+        return;
+      }
+      
+      saveCurrentClassification();
+      
+      // Clear current text but keep category selection
+      document.getElementById("textContent").value = "";
+      clearFile();
+      
+      showNotification("Ready for next text. Category selection maintained.", "info");
+    }
+
+    function updateProgress() {
+      const progressPercentage = (classifiedCount / totalTexts) * 100;
+      document.getElementById("progressInfo").textContent = `${classifiedCount}/${totalTexts} texts classified`;
+      document.getElementById("progressBar").style.width = `${progressPercentage}%`;
+    }
+
+    // Utility functions
+    function showNotification(message, type = "info") {
+      const colors = {
+        success: "bg-green-500 text-white",
+        error: "bg-red-500 text-white",
+        info: "bg-blue-500 text-white",
+        warning: "bg-yellow-500 text-black"
+      };
+
+      const notification = document.createElement("div");
+      notification.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 ${colors[type]} max-w-sm`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.opacity = "0";
+        notification.style.transform = "translateX(100%)";
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Drag & drop functionality
+    const uploadArea = document.getElementById("uploadArea");
+    
+    ["dragover", "dragenter"].forEach(eventName => {
+      uploadArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        uploadArea.classList.add("ring-2", "ring-blue-400", "bg-blue-50");
+      });
+    });
+
+    ["dragleave", "dragend"].forEach(eventName => {
+      uploadArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("ring-2", "ring-blue-400", "bg-blue-50");
+      });
+    });
+
+    uploadArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove("ring-2", "ring-blue-400", "bg-blue-50");
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const fileInput = document.getElementById("fileInput");
+        fileInput.files = files;
+        handleFileUpload({ target: { files } });
+      }
+    });
+
+    // Save and export functions
+    function saveAnnotation() {
+      if (classifications.length === 0) {
+        showNotification("No classifications to save!", "error");
+        return;
+      }
+      
+      const exportData = {
+        metadata: {
+          exportDate: new Date().toISOString(),
+          totalClassifications: classifiedCount
+        },
+        classifications: classifications
+      };
+      
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `text_classifications_${new Date().toISOString().split('T')[0]}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      showNotification("Classifications saved successfully!", "success");
+    }
+
+    // Navigation functions
+    function goBack() {
+      if (classifications.length > 0 || currentCategory) {
+        if (confirm("You have unsaved work. Are you sure you want to go back?")) {
+          window.location.href = "/frontend/Datasets.html";
+        }
+      } else {
+        window.location.href = "/frontend/Datasets.html";
+      }
+    }
+
+    // Initialize the application
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("Text Classification Tool initialized");
+      updateProgress();
+      showNotification("Text Classification Tool loaded successfully!", "success");
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Named Entity Recognition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Include mammoth.js for DOCX support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen p-5">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-7">
+    <div class="flex items-center gap-2">
+      <div class="w-6 h-6 bg-gray-600 rounded flex items-center justify-center text-white text-xs font-bold">T</div>
+      <div>
+        <div id="pageTitle" class="text-2xl font-semibold text-gray-800">Text.txt</div>
+        <div class="text-gray-500 text-sm mt-1">Named Entity Recognition</div>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button
+        class="px-4 py-2 border border-gray-300 bg-white rounded-lg cursor-pointer text-base flex items-center gap-2 hover:bg-gray-100 transition-colors"
+        onclick="goBack()">← Back to project</button>
+      <button
+        class="px-4 py-2 border border-gray-900 bg-gray-900 text-white rounded-lg cursor-pointer text-base flex items-center gap-2 hover:bg-gray-700 transition-colors"
+        onclick="saveAnnotation()">🔒 Save Annotation</button>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="flex flex-col lg:flex-row gap-8 min-h-[500px] w-full">
+    
+    <!-- Text Area Left -->
+    <div class="flex-1 bg-white border border-gray-300 rounded-xl p-8 relative min-h-[600px] flex flex-col justify-center items-center">
+      <!-- File Upload Status -->
+      <div class="uploaded-file hidden p-5 bg-green-50 border border-green-200 rounded mb-4 w-full" id="uploadedFile">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-semibold text-green-700" id="fileName"></div>
+            <div class="text-sm text-green-600 mt-1" id="fileDetails"></div>
+          </div>
+          <button onclick="clearFile()" class="text-red-500 hover:text-red-700 text-sm font-medium">✕ Clear</button>
+        </div>
+      </div>
+
+      <!-- Upload Area -->
+      <div
+        id="uploadArea"
+        class="upload-area border-2 border-dashed border-gray-300 rounded-xl flex flex-col justify-center items-center hover:border-blue-400 hover:bg-blue-50 w-full h-[400px] lg:h-[480px] cursor-pointer transition-all duration-200"
+        onclick="document.getElementById('fileInput').click()">
+        <div class="text-6xl mb-4 text-gray-300">📄</div>
+        <div class="text-lg text-gray-500 mb-3">Text Document Upload</div>
+        <p class="text-gray-400 text-sm text-center">
+          Click here to upload a text file<br>
+          <span class="text-xs text-gray-300">Supported formats: .txt, .doc, .docx</span>
+        </p>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div id="loadingIndicator" class="hidden flex items-center gap-2 text-blue-600 mt-4">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+        <span>Processing file...</span>
+      </div>
+
+      <!-- Text Content Area -->
+      <textarea
+        id="textContent"
+        class="text-content hidden w-full h-[400px] lg:h-[480px] border border-gray-300 rounded-lg p-4 outline-none text-base leading-relaxed resize-y mt-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+        placeholder="Your text content will appear here..."></textarea>
+      
+      <input type="file" id="fileInput" class="file-input hidden" accept=".txt,.doc,.docx" onchange="handleFileUpload(event)" />
+      
+      <!-- Progress Info -->
+      <div class="progress-info absolute bottom-5 right-7 text-xs text-gray-500 hidden bg-white px-3 py-2 rounded shadow-lg border" id="progressInfo">
+        0/200 texts annotated
+      </div>
+
+      <!-- Selected Text Display -->
+      <div id="selectedTextDisplay" class="hidden mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg w-full">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm text-yellow-600 mb-1">Selected Text:</div>
+            <div id="selectedText" class="font-semibold text-yellow-800 text-base"></div>
+          </div>
+          <button onclick="clearSelection()" class="text-red-500 hover:text-red-700 text-sm">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Right -->
+    <div class="w-full lg:w-[410px] lg:min-w-[410px] lg:max-w-[410px] flex-shrink-0">
+      
+      <!-- Annotation Tools Frame -->
+      <div class="shadow-lg bg-blue-50 border border-blue-100 rounded-2xl p-7 mb-4 sticky top-5">
+        <div class="w-full">
+          <div class="flex items-center gap-3 pb-4 border-b border-blue-100 mb-4">
+            <!-- SVG ICON -->
+            <svg class="w-5 h-5 text-orange-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"></path>
+              <circle cx="8" cy="9" r="1"></circle>
+              <circle cx="12" cy="9" r="1"></circle>
+              <circle cx="16" cy="9" r="1"></circle>
+            </svg>
+            <span class="font-semibold text-gray-800 text-lg">Annotation Tools</span>
+          </div>
+          
+          <div class="mt-3">
+            <div class="text-base font-semibold text-gray-700 mb-3">Identify Entities</div>
+            
+            <button
+              class="entity-btn w-full py-3 px-5 mb-3 bg-white text-gray-700 border-2 border-gray-300 text-base rounded-lg hover:bg-gray-50 transition-all duration-200"
+              id="btn-person"
+              data-entity="person"
+              onclick="selectEntity(this, 'person')">
+              Person
+            </button>
+            
+            <button
+              class="entity-btn w-full py-3 px-5 mb-3 bg-white text-gray-700 border-2 border-gray-300 text-base rounded-lg hover:bg-gray-50 transition-all duration-200"
+              id="btn-organization"
+              data-entity="organization"
+              onclick="selectEntity(this, 'organization')">
+              Organization
+            </button>
+            
+            <button
+              class="entity-btn w-full py-3 px-5 mb-3 bg-white text-gray-700 border-2 border-gray-300 text-base rounded-lg hover:bg-gray-50 transition-all duration-200"
+              id="btn-other"
+              data-entity="other"
+              onclick="selectEntity(this, 'other')">
+              Other
+            </button>
+            
+            <div class="border-t border-blue-100 pt-4 mt-4 space-y-3">
+              <button 
+                class="action-btn w-full py-3 px-5 bg-gray-900 text-white border-2 border-gray-900 text-base rounded-lg hover:bg-gray-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+                id="annotateBtn"
+                onclick="annotateSelectedText()"
+                disabled>
+                Save Annotation
+              </button>
+              
+              <button 
+                class="action-btn w-full py-3 px-5 bg-gray-900 text-white border-2 border-gray-900 text-base rounded-lg hover:bg-gray-700 transition-all duration-200" 
+                onclick="nextText()">
+                Next Text
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shortcuts Section -->
+      <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm mb-4 sticky top-[480px]">
+        <div class="text-lg font-semibold text-gray-700 mb-3">Keyboard Shortcuts</div>
+        <div class="space-y-2">
+          <div class="shortcut-item flex items-center gap-3 cursor-pointer select-none p-2 rounded hover:bg-gray-100 transition-colors"
+               id="sc-person" data-entity="person" onclick="selectShortcut(this)">
+            <div class="shortcut-key bg-gray-200 px-3 py-1 rounded text-sm font-bold min-w-[32px] text-center">1</div>
+            <span class="text-sm">Person</span>
+          </div>
+          <div class="shortcut-item flex items-center gap-3 cursor-pointer select-none p-2 rounded hover:bg-gray-100 transition-colors"
+               id="sc-organization" data-entity="organization" onclick="selectShortcut(this)">
+            <div class="shortcut-key bg-gray-200 px-3 py-1 rounded text-sm font-bold min-w-[32px] text-center">2</div>
+            <span class="text-sm">Organization</span>
+          </div>
+          <div class="shortcut-item flex items-center gap-3 cursor-pointer select-none p-2 rounded hover:bg-gray-100 transition-colors"
+               id="sc-other" data-entity="other" onclick="selectShortcut(this)">
+            <div class="shortcut-key bg-gray-200 px-3 py-1 rounded text-sm font-bold min-w-[32px] text-center">3</div>
+            <span class="text-sm">Other</span>
+          </div>
+        </div>
+        
+      </div>
+
+  </div>
+  
+  <script>
+    // Global variables
+    let currentEntity = "";
+    let annotatedCount = 0;
+    let totalTexts = 200;
+    let annotations = [];
+    let selectedText = "";
+    let selectedRange = null;
+    let currentFileName = "";
+
+    // File upload handler with enhanced DOCX support
+    async function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Validate file type
+      const allowedTypes = ['text/plain', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+      const allowedExtensions = ['.txt', '.docx', '.doc'];
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+      if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+        showNotification("Please upload a valid text file (.txt, .doc, .docx)", "error");
+        return;
+      }
+
+      // Show loading
+      showLoading(true);
+
+      try {
+        currentFileName = file.name;
+        const fileSize = (file.size / 1024).toFixed(1) + " KB";
+        
+        // Update UI
+        document.getElementById("fileName").textContent = currentFileName;
+        document.getElementById("pageTitle").textContent = currentFileName;
+        document.getElementById("fileDetails").textContent = `Size: ${fileSize} • Type: ${fileExtension.toUpperCase()}`;
+        
+        let textContent = "";
+
+        if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || fileExtension === '.docx') {
+          // Handle DOCX files using mammoth.js
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer });
+          textContent = result.value;
+          
+          if (result.messages.length > 0) {
+            console.log("DOCX conversion messages:", result.messages);
+          }
+        } else if (file.type === "application/msword" || fileExtension === '.doc') {
+          // Handle DOC files (limited support)
+          textContent = await readAsText(file);
+          // Clean up common DOC artifacts
+          textContent = textContent.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim();
+        } else {
+          // Handle plain text files
+          textContent = await readAsText(file);
+        }
+
+        if (!textContent || textContent.trim().length === 0) {
+          throw new Error("File appears to be empty or unreadable");
+        }
+
+        // Set the extracted text content
+        document.getElementById("textContent").value = textContent;
+        showFileUploaded();
+        showNotification("File uploaded successfully!", "success");
+        
+      } catch (error) {
+        console.error("Error processing file:", error);
+        showNotification(`Error processing file: ${error.message}. Please try again.`, "error");
+        clearFile();
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    // Helper function to read file as text
+    function readAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsText(file);
+      });
+    }
+
+    function showFileUploaded() {
+      document.getElementById("uploadedFile").classList.remove("hidden");
+      document.getElementById("uploadArea").classList.add("hidden");
+      document.getElementById("textContent").classList.remove("hidden");
+      document.getElementById("progressInfo").classList.remove("hidden");
+      
+      // Setup text selection
+      setupTextSelection();
+    }
+
+    function showLoading(show) {
+      const loading = document.getElementById("loadingIndicator");
+      if (show) {
+        loading.classList.remove("hidden");
+      } else {
+        loading.classList.add("hidden");
+      }
+    }
+
+    function clearFile() {
+      document.getElementById("uploadedFile").classList.add("hidden");
+      document.getElementById("uploadArea").classList.remove("hidden");
+      document.getElementById("textContent").classList.add("hidden");
+      document.getElementById("textContent").value = "";
+      document.getElementById("progressInfo").classList.add("hidden");
+      document.getElementById("selectedTextDisplay").classList.add("hidden");
+      document.getElementById("fileInput").value = "";
+      document.getElementById("pageTitle").textContent = "Text.txt";
+      currentFileName = "";
+      clearSelection();
+      annotations = [];
+      updateAnnotationsList();
+      annotatedCount = 0;
+      updateProgress();
+    }
+
+    // Text selection functionality
+    function setupTextSelection() {
+      const textArea = document.getElementById("textContent");
+      
+      textArea.addEventListener("mouseup", handleTextSelection);
+      textArea.addEventListener("keyup", handleTextSelection);
+    }
+
+    function handleTextSelection() {
+      const textArea = document.getElementById("textContent");
+      const start = textArea.selectionStart;
+      const end = textArea.selectionEnd;
+      
+      if (start !== end) {
+        selectedText = textArea.value.substring(start, end).trim();
+        selectedRange = { start, end };
+        
+        if (selectedText) {
+          document.getElementById("selectedText").textContent = selectedText;
+          document.getElementById("selectedTextDisplay").classList.remove("hidden");
+          document.getElementById("annotateBtn").disabled = !currentEntity;
+        }
+      } else {
+        clearSelection();
+      }
+    }
+
+    function clearSelection() {
+      document.getElementById("selectedTextDisplay").classList.add("hidden");
+      document.getElementById("annotateBtn").disabled = true;
+      selectedText = "";
+      selectedRange = null;
+    }
+
+    // Entity selection
+    function selectEntity(button, entity) {
+      // Remove selection from all buttons
+      document.querySelectorAll(".entity-btn").forEach((b) => {
+        b.classList.remove("bg-blue-600", "text-white", "border-blue-600");
+        b.classList.add("bg-white", "text-gray-700", "border-gray-300");
+      });
+
+      // Highlight selected button
+      button.classList.remove("bg-white", "text-gray-700", "border-gray-300");
+      button.classList.add("bg-blue-600", "text-white", "border-blue-600");
+      
+      currentEntity = entity;
+      highlightShortcut(entity);
+      
+      // Enable annotate button if text is selected
+      if (selectedText) {
+        document.getElementById("annotateBtn").disabled = false;
+      }
+      
+      showNotification(`Selected entity: ${entity.charAt(0).toUpperCase() + entity.slice(1)}`, "info");
+    }
+
+    // Shortcut handling
+    function selectShortcut(item) {
+      const entity = item.dataset.entity;
+      const button = document.getElementById(`btn-${entity}`);
+      if (button) {
+        selectEntity(button, entity);
+      }
+    }
+
+    function highlightShortcut(entity) {
+      // Remove highlight from all shortcuts
+      document.querySelectorAll(".shortcut-item").forEach((item) => {
+        item.classList.remove("bg-blue-100");
+        const key = item.querySelector(".shortcut-key");
+        key.classList.remove("bg-blue-600", "text-white");
+        key.classList.add("bg-gray-200");
+      });
+
+      // Highlight current shortcut
+      const currentShortcut = document.getElementById(`sc-${entity}`);
+      if (currentShortcut) {
+        currentShortcut.classList.add("bg-blue-100");
+        const key = currentShortcut.querySelector(".shortcut-key");
+        key.classList.remove("bg-gray-200");
+        key.classList.add("bg-blue-600", "text-white");
+      }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener("keydown", (e) => {
+      if (e.target.tagName === "TEXTAREA") return; // Don't interfere with textarea input
+      
+      switch(e.key) {
+        case "1":
+          e.preventDefault();
+          selectShortcut(document.getElementById("sc-person"));
+          break;
+        case "2":
+          e.preventDefault();
+          selectShortcut(document.getElementById("sc-organization"));
+          break;
+        case "3":
+          e.preventDefault();
+          selectShortcut(document.getElementById("sc-other"));
+          break;
+        case "Enter":
+          if (selectedText && currentEntity) {
+            e.preventDefault();
+            annotateSelectedText();
+          }
+          break;
+      }
+    });
+
+    // Annotation functions
+    function annotateSelectedText() {
+      if (!selectedText || !currentEntity) {
+        showNotification("Please select text and choose an entity type first!", "error");
+        return;
+      }
+
+      const annotation = {
+        id: Date.now(),
+        text: selectedText,
+        entity: currentEntity,
+        range: selectedRange,
+        timestamp: new Date().toLocaleTimeString(),
+        filename: currentFileName
+      };
+
+      annotations.push(annotation);
+      updateAnnotationsList();
+      
+      // Clear selection
+      clearSelection();
+      
+      // Update progress
+      annotatedCount++;
+      updateProgress();
+      
+      // Show success message
+      showNotification(`Annotated "${selectedText}" as ${currentEntity}`, "success");
+    }
+
+    function updateAnnotationsList() {
+      const list = document.getElementById("annotationsList");
+      
+      if (annotations.length === 0) {
+        list.innerHTML = '<div class="text-sm text-gray-500 italic">No annotations yet</div>';
+        return;
+      }
+
+      const entityColors = {
+        person: "bg-blue-100 text-blue-800 border-blue-200",
+        organization: "bg-green-100 text-green-800 border-green-200",
+        other: "bg-purple-100 text-purple-800 border-purple-200"
+      };
+
+      list.innerHTML = annotations.map(ann => `
+        <div class="annotation-item p-3 bg-gray-50 rounded-lg border">
+          <div class="flex justify-between items-start mb-2">
+            <span class="px-2 py-1 rounded-full text-xs font-medium border ${entityColors[ann.entity]}">${ann.entity}</span>
+            <button onclick="removeAnnotation(${ann.id})" class="text-red-500 hover:text-red-700 text-xs">✕</button>
+          </div>
+          <div class="text-gray-800 font-medium text-sm mb-1">"${ann.text}"</div>
+          <div class="text-xs text-gray-500">${ann.timestamp}</div>
+        </div>
+      `).join('');
+    }
+
+    function removeAnnotation(id) {
+      annotations = annotations.filter(ann => ann.id !== id);
+      updateAnnotationsList();
+      annotatedCount = Math.max(0, annotatedCount - 1);
+      updateProgress();
+      showNotification("Annotation removed", "info");
+    }
+
+    function clearAllAnnotations() {
+      if (annotations.length === 0) return;
+      
+      if (confirm("Are you sure you want to clear all annotations?")) {
+        annotations = [];
+        updateAnnotationsList();
+        annotatedCount = 0;
+        updateProgress();
+        showNotification("All annotations cleared", "info");
+      }
+    }
+
+    function updateProgress() {
+      document.getElementById("progressInfo").textContent = `${annotatedCount}/${totalTexts} texts annotated`;
+    }
+
+    // Navigation and save functions
+    function nextText() {
+      if (annotations.length === 0) {
+        showNotification("Please add at least one annotation before proceeding!", "error");
+        return;
+      }
+      
+      // Save current annotations
+      console.log("Saving annotations:", annotations);
+      
+      // Reset for next text
+      clearFile();
+      showNotification("Ready for next text", "success");
+    }
+
+    function saveAnnotation() {
+      if (annotations.length === 0) {
+        showNotification("No annotations to save!", "error");
+        return;
+      }
+      
+      const exportData = {
+        metadata: {
+          exportDate: new Date().toISOString(),
+          totalAnnotations: annotatedCount,
+          filename: currentFileName
+        },
+        annotations: annotations
+      };
+      
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `ner_annotations_${new Date().toISOString().split('T')[0]}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      showNotification("Annotations saved successfully!", "success");
+    }
+
+    // Utility functions
+    function showNotification(message, type = "info") {
+      const colors = {
+        success: "bg-green-500 text-white",
+        error: "bg-red-500 text-white",
+        info: "bg-blue-500 text-white",
+        warning: "bg-yellow-500 text-black"
+      };
+
+      const notification = document.createElement("div");
+      notification.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 ${colors[type]} max-w-sm`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.opacity = "0";
+        notification.style.transform = "translateX(100%)";
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Drag & drop functionality
+    const uploadArea = document.getElementById("uploadArea");
+    
+    ["dragover", "dragenter"].forEach(eventName => {
+      uploadArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        uploadArea.classList.add("ring-2", "ring-blue-400", "bg-blue-50");
+      });
+    });
+
+    ["dragleave", "dragend"].forEach(eventName => {
+      uploadArea.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("ring-2", "ring-blue-400", "bg-blue-50");
+      });
+    });
+
+    uploadArea.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove("ring-2", "ring-blue-400", "bg-blue-50");
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const fileInput = document.getElementById("fileInput");
+        fileInput.files = files;
+        handleFileUpload({ target: { files } });
+      }
+    });
+
+    // Navigation functions
+    function goBack() {
+      if (annotations.length > 0) {
+        if (confirm("You have unsaved annotations. Are you sure you want to go back?")) {
+          window.location.href = "/frontend/Datasets.html";
+        }
+      } else {
+        window.location.href = "/frontend/Datasets.html";
+      }
+    }
+
+    // Initialize the application
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("Named Entity Recognition Tool initialized");
+      updateProgress();
+      showNotification("Named Entity Recognition Tool loaded successfully!", "success");
+    });
+  </script>
+
+</body>
+</html>

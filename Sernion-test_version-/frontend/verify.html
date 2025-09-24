@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verification Code</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex justify-center items-center min-h-screen bg-gray-100 font-inter">
+  <div class="bg-white shadow-lg rounded-xl p-8 w-full max-w-lg text-center">
+    <h2 class="text-base md:text-lg text-gray-800 mb-8 leading-relaxed">
+      We've sent a verification code to your email. Please check your inbox and enter the code below to continue.
+    </h2>
+
+    <!-- Error message -->
+    <div id="errorMessage" class="hidden text-red-600 text-sm mb-4"></div>
+
+    <!-- Code Inputs -->
+    <div id="codeInputs" class="flex justify-center gap-6 mb-8">
+      <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric"
+             class="code-digit w-16 h-16 md:w-20 md:h-20 text-2xl font-bold text-center border-2 border-gray-400 rounded-lg focus:border-black focus:outline-none transition">
+      <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric"
+             class="code-digit w-16 h-16 md:w-20 md:h-20 text-2xl font-bold text-center border-2 border-gray-400 rounded-lg focus:border-black focus:outline-none transition">
+      <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric"
+             class="code-digit w-16 h-16 md:w-20 md:h-20 text-2xl font-bold text-center border-2 border-gray-400 rounded-lg focus:border-black focus:outline-none transition">
+      <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric"
+             class="code-digit w-16 h-16 md:w-20 md:h-20 text-2xl font-bold text-center border-2 border-gray-400 rounded-lg focus:border-black focus:outline-none transition">
+    </div>
+
+    <!-- Continue Button -->
+    <button id="continueBtn" disabled
+            class="w-60 py-3 text-lg font-medium rounded-lg bg-black text-white disabled:bg-gray-400 hover:bg-gray-800 transition mb-4">
+      Continue
+    </button>
+
+    <!-- Resend Section -->
+    <div class="text-sm text-gray-600">
+      Didn't get the code?
+      <a href="#" id="resendLink" class="text-blue-600 hover:underline ml-1">Resend</a>
+      <span id="timerWrapper" class="ml-2"><span id="countdown"></span></span>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const inputs = document.querySelectorAll('.code-digit');
+      const continueBtn = document.getElementById('continueBtn');
+      const errorMessage = document.getElementById('errorMessage');
+      const resendLink = document.getElementById('resendLink');
+      const countdown = document.getElementById('countdown');
+      const timerWrapper = document.getElementById('timerWrapper');
+      
+      inputs[0].focus();
+
+      function checkInputsFilled() {
+        let allFilled = [...inputs].every(input => input.value);
+        continueBtn.disabled = !allFilled;
+        return allFilled;
+      }
+
+      function clearErrorState() {
+        errorMessage.classList.add('hidden');
+        inputs.forEach(input => input.classList.remove('border-red-500', 'bg-red-50'));
+      }
+
+      function showErrorState(message) {
+        errorMessage.textContent = message || 'Please enter a valid verification code.';
+        errorMessage.classList.remove('hidden');
+        inputs.forEach(input => {
+          if (!input.value) input.classList.add('border-red-500', 'bg-red-50');
+        });
+      }
+
+      inputs.forEach((input, index) => {
+        input.addEventListener('keydown', function(e) {
+          clearErrorState();
+          if (!/^\d$/.test(e.key) && !['Backspace','Delete','ArrowLeft','ArrowRight','Tab'].includes(e.key)) {
+            e.preventDefault();
+          }
+        });
+
+        input.addEventListener('input', function() {
+          if (this.value && index < inputs.length - 1) inputs[index + 1].focus();
+          checkInputsFilled();
+        });
+
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Backspace' && !this.value && index > 0) {
+            inputs[index - 1].focus();
+          }
+        });
+
+        input.addEventListener('paste', function(e) {
+          e.preventDefault();
+          const digits = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').split('');
+          inputs.forEach((input, i) => { if (i < digits.length) input.value = digits[i]; });
+          if (digits.length >= inputs.length) inputs[inputs.length - 1].focus();
+          else if (digits.length > 0) inputs[digits.length].focus();
+          checkInputsFilled();
+        });
+      });
+
+      continueBtn.addEventListener('click', function() {
+        if (checkInputsFilled()) {
+          let code = [...inputs].map(i => i.value).join('');
+          if (code === '1234') {
+            window.location.href = 'dashboard.html';
+          } else {
+            showErrorState('Invalid verification code. Please try again.');
+          }
+        } else {
+          showErrorState('Please enter the verification code.');
+        }
+      });
+
+      let cooldownTime = 60, timer;
+      function startCooldown() {
+        resendLink.classList.add('pointer-events-none', 'opacity-50');
+        timerWrapper.style.display = 'inline';
+        cooldownTime = 60;
+        updateCountdown();
+        timer = setInterval(function() {
+          cooldownTime--;
+          updateCountdown();
+          if (cooldownTime <= 0) {
+            clearInterval(timer);
+            resendLink.classList.remove('pointer-events-none', 'opacity-50');
+            timerWrapper.style.display = 'none';
+          }
+        }, 1000);
+      }
+
+      function updateCountdown() {
+        countdown.textContent = `(${cooldownTime}s)`;
+      }
+
+      startCooldown();
+
+      resendLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (cooldownTime <= 0) {
+          inputs.forEach(input => { input.value = ''; input.classList.remove('border-red-500', 'bg-red-50'); });
+          inputs[0].focus();
+          clearErrorState();
+          continueBtn.disabled = true;
+          const successMsg = document.createElement('div');
+          successMsg.textContent = 'Verification code resent!';
+          successMsg.className = "text-green-600 text-sm mb-4";
+          errorMessage.insertAdjacentElement('beforebegin', successMsg);
+          setTimeout(() => successMsg.remove(), 3000);
+          startCooldown();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

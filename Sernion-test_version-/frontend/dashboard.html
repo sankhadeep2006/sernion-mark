@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard - Annotation Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .profile-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #fff;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+            z-index: 10;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        .profile-dropdown:hover .dropdown-content {
+            display: block;
+        }
+        /* User avatar large in modals */
+        .modal-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 9999px;
+            background-color: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem auto;
+            color: #4b5563;
+        }
+        /* Center modal text and avatar */
+        .modal-content-center {
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-sm p-6 hidden md:block">
+            <div class="mb-8">
+                <h2 class="font-bold text-lg">Dashboard</h2>
+            </div>
+            <nav>
+                <ul class="space-y-4">
+                    <li class="flex items-center text-black font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                        </svg>
+                        Dashboard
+                    </li>
+                    <li class="flex items-center text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                        </svg>
+                        <a href="Projects.html">Projects</a>
+                    </li>
+                    <li class="flex items-center text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+                        </svg>
+                        <a href="Datasets.html">Datasets</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6">
+            <!-- Header with Profile Section -->
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-2xl font-bold">Dashboard</h1>
+                
+                <div class="flex items-center">
+                    <a href="create.html" class="bg-black text-white px-4 py-2 rounded flex items-center text-sm mr-4 hover:bg-gray-900 transition-colors">
+                        <span class="mr-2">+</span> New Project
+                    </a>
+                    
+                    <!-- Profile Section -->
+                    <div class="profile-dropdown">
+                        <button class="flex items-center focus:outline-none" aria-haspopup="true" aria-expanded="false" id="profileDropdownBtn" aria-label="User profile dropdown">
+                            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700" id="userAvatarSmall">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                        </button>
+                        <div class="dropdown-content" role="menu" aria-labelledby="profileDropdownBtn">
+                            <div class="p-3 border-b border-gray-100 flex items-center">
+                                <div id="userAvatarDropdown" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 mr-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="font-medium leading-tight" id="dashUserName">User</p>
+                                    <p class="text-xs text-gray-500 leading-tight" id="dashUserEmail">user@example.com</p>
+                                </div>
+                            </div>
+                            <a href="Dashboard Profile/Edit Profile.html" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="0">
+                                Edit Profile
+                                <span class="ml-2 text-gray-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13l6.536-6.536a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-2.828 0L9 13z" />
+                                    </svg>
+                                </span>
+                            </a>
+                            <a href="Dashboard Profile/Change Password.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="0">Change Password</a>
+                            <a href="Dashboard Profile/Notification.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="0">Notifications</a>
+                            <button id="openDeleteModal" class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                Delete Account
+                            </button>
+                            <div class="border-t border-gray-100">
+                                <button id="openLogoutModal" class="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
+                                    Log Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-gray-600 mb-6">Welcome back! Here's an overview of your annotation projects.</p>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <!-- Total Projects -->
+                <div class="bg-white p-4 rounded border border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-600 mb-2">Total Projects</h3>
+                    <p class="text-3xl font-bold" id="statTotalProjects">0</p>
+                    <p class="text-sm text-green-600">+0 from last week</p>
+                </div>
+
+                <!-- Active Tasks -->
+                <div class="bg-white p-4 rounded border border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-600 mb-2">Active Tasks</h3>
+                    <p class="text-3xl font-bold" id="statActiveTasks">0</p>
+                    <p class="text-sm text-green-600">+0 today</p>
+                </div>
+
+                <!-- Completed -->
+                <div class="bg-white p-4 rounded border border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-600 mb-2">Completed</h3>
+                    <p class="text-3xl font-bold" id="statCompleted">0</p>
+                    <p class="text-sm text-green-600">+0% this month</p>
+                </div>
+
+                <!-- Team Members -->
+                <div class="bg-white p-4 rounded border border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-600 mb-2">Team members</h3>
+                    <p class="text-3xl font-bold" id="statTeamMembers">0</p>
+                    <p class="text-sm text-gray-600">0 active now</p>
+                </div>
+            </div>
+
+            <!-- Recent Projects -->
+            <div class="bg-white p-4 rounded border border-gray-200" id="recentProjects">
+                <h3 class="text-sm font-medium text-gray-600 mb-4">Recent Projects</h3>
+                <div class="py-12 text-center text-gray-400" id="recentProjectsEmpty">
+                    <p>No recent projects to display</p>
+                </div>
+                <div id="recentProjectsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around py-3">
+        <a href="#" class="flex flex-col items-center text-black" aria-current="page">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            <span class="text-xs">Dashboard</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+            </svg>
+            <span class="text-xs">Projects</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+            </svg>
+            <span class="text-xs">Datasets</span>
+        </a>
+    </div>
+
+    <!-- Delete Account Modal -->
+    <div
+        id="deleteModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden"
+        aria-modal="true"
+        role="dialog"
+        aria-labelledby="deleteModalTitle"
+        aria-describedby="deleteModalDesc"
+    >
+        <div class="bg-white rounded-md shadow-lg border border-gray-300 w-full max-w-lg p-8 relative">
+            <button
+                id="closeDeleteModalBtn"
+                type="button"
+                class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none"
+                aria-label="Close delete account modal"
+            >&times;</button>
+            
+            <div class="modal-content-center">
+                <div class="modal-avatar" aria-hidden="true" id="deleteModalAvatar">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-10 w-10"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </div>
+                <p id="deleteModalTitle" class="mb-5 font-semibold text-gray-900 text-lg">
+                    &#9888; Deleting your account is permanent and cannot be undone.
+                </p>
+                <p id="deleteModalDesc" class="mb-5 text-gray-700 text-base">
+                    All your projects, files, and annotations will be lost.
+                </p>
+                
+                <input
+                    id="passwordInput"
+                    type="password"
+                    placeholder="Password"
+                    class="w-full border border-gray-400 rounded-sm px-4 py-2 focus:border-black focus:outline-none"
+                    aria-describedby="errorMsg"
+                />
+                <p
+                    id="errorMsg"
+                    class="text-red-500 mt-3 text-sm hidden"
+                    role="alert"
+                >
+                    Please enter your password.
+                </p>
+            </div>
+            
+            <button
+                id="confirmDeleteBtn"
+                class="w-full border border-red-500 text-red-600 font-semibold py-2 rounded mt-6 hover:bg-red-50 transition-colors"
+            >
+                Delete Account
+            </button>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div
+        id="logoutModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden"
+        aria-modal="true"
+        role="dialog"
+        aria-labelledby="logoutModalTitle"
+        aria-describedby="logoutModalDesc"
+    >
+        <div class="bg-white rounded-md shadow-lg border border-gray-400 w-full max-w-xl mx-4 p-8 relative">
+            <button
+                id="closeLogoutModalBtn"
+                type="button"
+                class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl font-bold leading-none"
+                aria-label="Close logout confirmation modal"
+            >&times;</button>
+
+            <div class="modal-content-center">
+                <div class="modal-avatar" aria-hidden="true" id="logoutModalAvatar">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-10 w-10"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </div>
+
+                <h2 id="logoutModalTitle" class="text-lg font-semibold mb-3">Are you sure you want to log out?</h2>
+                <p id="logoutModalDesc" class="mb-8 text-gray-700">You will be logged out of your account.</p>
+
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <button
+                        id="logoutBtn"
+                        class="w-full sm:w-48 border border-red-500 text-red-600 font-semibold py-2 rounded hover:bg-red-50 transition-colors"
+                    >
+                        Log Out
+                    </button>
+                    <button
+                        id="cancelLogoutBtn"
+                        class="w-full sm:w-48 border border-gray-500 text-gray-600 font-medium py-2 rounded hover:bg-gray-50 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="js/api.js"></script>
+<script>
+(async function initDashboard() {
+    try {
+        const user = api.getCurrentUser();
+        if (user) {
+            document.getElementById('dashUserName').textContent = user.full_name || user.username;
+            document.getElementById('dashUserEmail').textContent = user.email || '';
+        }
+        const summary = await api.adminSummary();
+        document.getElementById('statTotalProjects').textContent = summary.total_projects ?? 0;
+        document.getElementById('statCompleted').textContent = summary.done_tasks ?? 0;
+        // naive active tasks = total - done
+        const active = Math.max((summary.total_tasks ?? 0) - (summary.done_tasks ?? 0), 0);
+        document.getElementById('statActiveTasks').textContent = active;
+
+        const projects = await api.getProjects();
+        const listEl = document.getElementById('recentProjectsList');
+        const emptyEl = document.getElementById('recentProjectsEmpty');
+        const items = (projects.results || []).slice(0, 6);
+        if (items.length) emptyEl.style.display = 'none';
+        items.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'border rounded p-4';
+            card.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-semibold">${p.name}</p>
+                        <p class="text-sm text-gray-600">${p.description || ''}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500">Items</p>
+                        <p class="font-bold" id="items_${p.id}">${p.item_count}</p>
+                        <p class="text-xs text-gray-500 mt-1">Annotated</p>
+                        <p class="font-bold" id="ann_${p.id}">${p.annotated_count}</p>
+                    </div>
+                </div>`;
+            listEl.appendChild(card);
+            // live counts via websocket
+            const ws = api.connectCountsWebSocket(p.id, (data) => {
+                const iEl = document.getElementById(`items_${p.id}`);
+                const aEl = document.getElementById(`ann_${p.id}`);
+                if (iEl) iEl.textContent = data.item_count;
+                if (aEl) aEl.textContent = data.annotated_count;
+            });
+        });
+    } catch (e) {
+        console.error('Dashboard init failed', e);
+    }
+})();
+</script>
+</body>
+</html>

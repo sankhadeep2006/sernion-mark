@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team & Settings</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .progress-container { position: relative; padding: 0 16px; margin: 40px 0; }
+    .progress-line { position: absolute; height: 2px; background-color: #e5e5e5; left: 24px; right: 24px; top: 14px; }
+    .progress-active { position: absolute; height: 2px; background-color: #000; left: 24px; width: calc(100% - 48px); top: 14px; }
+    .step-circles { position: relative; display: flex; justify-content: space-between; z-index: 10; }
+  </style>
+</head>
+<body class="bg-white font-[Inter]">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- Header -->
+    <div class="flex items-center py-6 border-b">
+      <a href="Image/index5.html" onclick="history.back(); return false;" class="text-3xl text-black mr-4" aria-label="Go back">←</a>
+      <h1 class="text-2xl font-bold">Create new project</h1>
+    </div>
+
+    <!-- Progress (Step 4 active) -->
+    <div class="progress-container">
+      <div class="progress-line"></div>
+      <div class="progress-active"></div>
+      <div class="step-circles">
+        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-medium text-sm">1</div>
+        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-medium text-sm">2</div>
+        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-medium text-sm">3</div>
+        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-medium text-sm">4</div>
+      </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white border border-gray-200 rounded-lg p-8 mb-8">
+      <div class="mb-6">
+        <h2 class="text-xl font-medium mb-1">Team & Settings</h2>
+        <p class="text-gray-600">Configure team access and project settings</p>
+      </div>
+
+      <!-- Team Members -->
+      <div class="mb-6">
+        <label class="block font-semibold mb-2" for="emailInput">Team members</label>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input type="email" id="emailInput" placeholder="Enter email address" class="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-black" />
+          <div class="flex gap-2">
+            <button id="addBtn" class="px-4 py-2 bg-black text-white rounded-md font-medium" type="button">Add</button>
+            <button id="removeBtn" class="px-4 py-2 bg-black text-white rounded-md font-medium" type="button">Remove</button>
+          </div>
+        </div>
+        <select id="emailDropdown" class="mt-4 w-full rounded-md border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-black text-sm">
+          <option value="" disabled selected>No members yet</option>
+        </select>
+        <div id="emailList" class="mt-4 flex flex-wrap gap-2"></div>
+        <p id="emailPlaceholder" class="mt-3 text-sm text-gray-500">Email addresses will appear here.</p>
+      </div>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="flex justify-between mb-10">
+  <a href="Dataset_upload.html" class="px-6 py-2 bg-black text-white font-medium rounded text-center">Previous</a>
+  <a href="Successfully.html" class="px-6 py-2 bg-black text-white font-medium rounded text-center">Finish</a>
+    </div>
+  </div>
+
+  <script>
+    function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+
+    const input = document.getElementById('emailInput');
+    const addBtn = document.getElementById('addBtn');
+    const removeBtn = document.getElementById('removeBtn');
+    const select = document.getElementById('emailDropdown');
+    const list = document.getElementById('emailList');
+    const placeholder = document.getElementById('emailPlaceholder');
+
+    function saveTeam() {
+      const members = Array.from(select.options).filter(o=>o.value).map(o=>o.value);
+      localStorage.setItem('teamMembers', JSON.stringify(members));
+    }
+
+    function restoreTeam() {
+      const stored = localStorage.getItem('teamMembers');
+      if (!stored) return;
+      const members = JSON.parse(stored);
+      if (members.length) {
+        // clear placeholder
+        select.innerHTML = '';
+        members.forEach(email => {
+          const option = document.createElement('option');
+          option.value = email;
+          option.textContent = email;
+          select.appendChild(option);
+          const chip = document.createElement('span');
+          chip.className='inline-flex items-center gap-2 bg-gray-100 border border-gray-300 rounded-full px-3 py-1 text-sm';
+          chip.dataset.email=email;
+          chip.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M16 12H8m8 0a4 4 0 10-8 0 4 4 0 008 0z" /></svg><span>${email}</span>`;
+          list.appendChild(chip);
+        });
+        placeholder.classList.add('hidden');
+      }
+    }
+
+    function addEmail() {
+      const email = input.value.trim();
+      if (!email) return; if (!isValidEmail(email)) { alert('Please enter a valid email.'); return; }
+      for (const opt of select.options) { if (opt.value.toLowerCase() === email.toLowerCase()) { alert('This email is already in the list.'); input.value=''; return; } }
+      if (select.options.length && select.options[0].value === '') select.remove(0);
+      const option = document.createElement('option'); option.value = email; option.textContent = email; select.appendChild(option); select.value = email; input.value='';
+      const chip = document.createElement('span'); chip.className='inline-flex items-center gap-2 bg-gray-100 border border-gray-300 rounded-full px-3 py-1 text-sm'; chip.dataset.email=email; chip.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M16 12H8m8 0a4 4 0 10-8 0 4 4 0 008 0z" /></svg><span>${email}</span>`; list.appendChild(chip); placeholder.classList.add('hidden');
+      saveTeam();
+    }
+    function removeSelected() {
+      if (!select.value) { alert('Select a member to remove.'); return; }
+      const removed = select.value; const idx = select.selectedIndex; if (idx>=0) select.remove(idx);
+      const chip = list.querySelector(`[data-email="${CSS.escape(removed)}"]`); if (chip) chip.remove();
+      if (!select.options.length) { const ph = document.createElement('option'); ph.value=''; ph.textContent='No members yet'; ph.disabled=true; ph.selected=true; select.appendChild(ph); }
+      if (!list.children.length) { placeholder.classList.remove('hidden'); }
+      saveTeam();
+    }
+    addBtn.addEventListener('click', addEmail); removeBtn.addEventListener('click', removeSelected);
+    input.addEventListener('keydown', e => { if (e.key==='Enter'){ e.preventDefault(); addEmail(); }});
+    restoreTeam();
+
+    // Intercept Finish link to ensure save (in case of manual edits later)
+    const finishLink = document.querySelector('a[href="Successfully.html"]');
+    if (finishLink) {
+      finishLink.addEventListener('click', () => { saveTeam(); });
+    }
+  </script>
+</body>
+</html>

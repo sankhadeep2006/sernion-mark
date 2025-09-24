@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dataset Upload - Create</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .progress-container { 
+      position: relative; 
+      padding: 0 8px; 
+      margin: 15px 0; 
+    }
+    
+    @media (min-width: 640px) {
+      .progress-container { 
+        padding: 0 16px; 
+        margin: 20px 0; 
+      }
+    }
+    
+    .progress-line { 
+      position: absolute; 
+      height: 2px; 
+      background-color: #e5e5e5; 
+      left: 20px; 
+      right: 20px; 
+      top: 14px; 
+    }
+    
+    @media (min-width: 640px) {
+      .progress-line { 
+        left: 24px; 
+        right: 24px; 
+      }
+    }
+    
+    .progress-active { 
+      position: absolute; 
+      height: 2px; 
+      background-color: #000; 
+      left: 20px; 
+      width: calc(66.66% - 12px); 
+      top: 14px; 
+    }
+    
+    @media (min-width: 640px) {
+      .progress-active { 
+        left: 24px; 
+        width: calc(66.66% - 16px); 
+      }
+    }
+    
+    .step-circles { 
+      position: relative; 
+      display: flex; 
+      justify-content: space-between; 
+      z-index: 10; 
+    }
+    
+    .upload-hover {
+      transform: scale(1.01);
+      border-color: #374151;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .upload-active {
+      border-color: #10b981;
+      background-color: #f0fdf4;
+    }
+
+    .main-container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 0;
+    }
+
+    .footer-area {
+      flex-shrink: 0;
+      padding: 16px 0;
+    }
+
+    /* Prevent scrolling during upload */
+    .no-scroll {
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body class="bg-white font-[Inter]">
+  <div class="max-w-4xl mx-auto px-4">
+    <!-- Header -->
+    <div class="flex items-center py-6 border-b">
+      <!-- Back arrow now points to create.html with history.back() fallback -->
+      <a href="/frontend/annotation.html" onclick="history.back(); return false;" class="text-3xl text-black mr-4" aria-label="Go back">←</a>
+      <h1 class="text-2xl font-bold">Create new project</h1>
+    </div>
+    
+    <!-- Progress Steps - Fixed positioning -->
+    <div class="progress-container">
+      <!-- Progress Lines -->
+      <div class="progress-line"></div>
+      <div class="progress-active"></div>
+      
+      <!-- Step Circles -->
+      <div class="step-circles">
+        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-medium text-sm">1</div>
+        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-black text-white font-medium text-sm">2</div>
+        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-700 font-medium text-sm">3</div>
+        <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 text-gray-700 font-medium text-sm">4</div>
+      </div>
+    </div>
+    
+    <!-- Content Area -->
+    <div class="content-area">
+      <!-- Main Card -->
+      <div class="bg-white border border-gray-200 rounded-none sm:rounded-lg shadow-sm sm:shadow-md p-4 sm:p-5 lg:p-6 mb-4 -mx-3 sm:mx-0">
+        <!-- Header Section -->
+        <div class="mb-4 sm:mb-5">
+          <h2 class="text-lg sm:text-xl font-semibold mb-1 text-gray-900">Dataset Upload</h2>
+          <p class="text-sm text-gray-600">Upload your dataset for annotation</p>
+        </div>
+
+        <!-- Selected Annotation Display -->
+        <div id="selectedAnnotation" class="mb-3 sm:mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg font-medium text-sm text-blue-800 hidden"></div>
+
+        <!-- Dataset Upload Section -->
+        <div class="mb-4 sm:mb-5">
+          <label class="block font-semibold text-sm sm:text-base mb-2 text-gray-900">
+            Dataset Upload
+            <span class="text-red-500 ml-1">*</span>
+          </label>
+          
+          <!-- Upload Area -->
+          <div id="uploadBox" 
+               class="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:h-40 text-center hover:border-gray-400 cursor-pointer transition-all duration-300 group">
+            <div class="flex flex-col items-center">
+              <!-- Upload Icon/Image -->
+              <div class="mb-2">
+                <div class="w-12 h-12 sm:w-16 sm:h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto opacity-70 group-hover:opacity-100 transition-opacity">
+                  <svg class="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                  </svg>
+                </div>
+              </div>
+              
+              <!-- Upload Text -->
+              <div class="space-y-1">
+                <div class="font-semibold text-sm sm:text-base text-gray-800">Upload your dataset</div>
+                <div class="text-gray-600 text-xs sm:text-sm max-w-xs mx-auto">
+                  <span class="block sm:inline">Drop files here or </span>
+                  <span class="text-black font-medium underline">click to browse</span>
+                </div>
+                <div class="text-xs text-gray-500">
+                  Supports ZIP, folders, and individual files
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Hidden File Input -->
+          <input type="file" id="fileInput" multiple class="hidden" />
+
+          <!-- Upload Progress -->
+          <div id="uploadProgress" class="hidden mt-3">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-medium text-gray-700">Uploading files...</span>
+              <span class="text-xs text-gray-500" id="progressPercent">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5">
+              <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style="width: 0%" id="progressBar"></div>
+            </div>
+          </div>
+
+          <!-- File List -->
+          <div id="fileList" class="hidden mt-3">
+            <div class="text-sm font-medium text-gray-800 mb-2">Selected Files:</div>
+            <div id="fileItems" class="space-y-1 max-h-24 overflow-y-auto border border-gray-200 rounded-md p-2 bg-gray-50"></div>
+          </div>
+        </div>
+
+        <!-- Guidelines Section -->
+        <div class="space-y-3">
+          <div>
+            <label for="guidelines" class="block font-semibold text-sm sm:text-base mb-2 text-gray-900">
+              Annotation Guidelines
+            </label>
+            <textarea 
+              id="guidelines" 
+              placeholder="Provide detailed instructions for annotators..." 
+              class="w-full border border-gray-300 rounded-md p-3 min-h-[80px] sm:min-h-[100px] focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent resize-y text-sm transition-all duration-200"
+              rows="4"></textarea>
+            <div class="flex items-center justify-between mt-1">
+              <p class="text-gray-500 text-xs">Clear guidelines help ensure consistent annotations.</p>
+              <span class="text-xs text-gray-400" id="charCount">0/1000 characters</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="footer-area flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 px-0 sm:px-0">
+      <a href="../annotation.html" 
+         onclick="history.back(); return false;" 
+         class="w-full sm:w-auto px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg text-center transition-colors duration-200 border border-gray-300">
+        Previous
+      </a>
+      <button id="nextBtn"
+              class="w-full sm:w-auto px-6 py-2.5 bg-black hover:bg-gray-800 text-white font-medium rounded-lg text-center transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed">
+        Next
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let selectedFiles = [];
+
+    // Get selected annotation from query params or localStorage
+    function getQueryParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+
+    // Initialize page
+    function initializePage() {
+      const selectedAnnotation = getQueryParam('annotation') || localStorage.getItem('selectedAnnotation');
+      const selectedDataType = localStorage.getItem('selectedDataType');
+      
+      if (selectedAnnotation) {
+        const annotationDiv = document.getElementById('selectedAnnotation');
+        annotationDiv.textContent = `Selected: ${selectedDataType ? selectedDataType.charAt(0).toUpperCase() + selectedDataType.slice(1) : ''} - ${selectedAnnotation}`;
+        annotationDiv.classList.remove('hidden');
+      }
+    }
+
+    // Upload functionality
+    const uploadBox = document.getElementById('uploadBox');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const fileItems = document.getElementById('fileItems');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercent = document.getElementById('progressPercent');
+    const guidelines = document.getElementById('guidelines');
+    const charCount = document.getElementById('charCount');
+
+    // Upload box interactions
+    uploadBox.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    uploadBox.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadBox.classList.add('upload-active');
+    });
+
+    uploadBox.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      uploadBox.classList.remove('upload-active');
+    });
+
+    uploadBox.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadBox.classList.remove('upload-active');
+      const files = e.dataTransfer.files;
+      handleFiles(files);
+    });
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+      handleFiles(e.target.files);
+    });
+
+    // Handle file selection
+    function handleFiles(files) {
+      if (files.length === 0) return;
+
+      // Prevent scrolling during upload
+      document.body.classList.add('no-scroll');
+
+      // Add files to selectedFiles array
+      selectedFiles = [...selectedFiles, ...Array.from(files)];
+
+      // Show file list
+      fileList.classList.remove('hidden');
+      updateFileList();
+
+      // Simulate upload progress
+      simulateUpload();
+      
+      // Update form validation
+      validateForm();
+    }
+
+    // Update file list display
+    function updateFileList() {
+      fileItems.innerHTML = '';
+
+      selectedFiles.forEach((file, index) => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'flex items-center justify-between p-2 bg-white rounded border text-xs';
+        fileItem.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <div class="w-6 h-6 bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
+              <span class="text-xs font-bold text-blue-600">${file.name.split('.').pop().toUpperCase()}</span>
+            </div>
+            <div class="min-w-0">
+              <div class="font-medium text-gray-800 truncate">${file.name}</div>
+              <div class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+            </div>
+          </div>
+          <button onclick="removeFile(${index})" class="text-red-500 hover:text-red-700 flex-shrink-0 ml-2">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        `;
+        fileItems.appendChild(fileItem);
+      });
+
+      if (selectedFiles.length === 0) {
+        fileList.classList.add('hidden');
+      }
+    }
+
+    // Remove file function
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      updateFileList();
+      validateForm();
+    }
+
+    // Simulate upload progress
+    function simulateUpload() {
+      uploadProgress.classList.remove('hidden');
+      let progress = 0;
+      
+      const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 100) progress = 100;
+        
+        progressBar.style.width = progress + '%';
+        progressPercent.textContent = Math.round(progress) + '%';
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            uploadProgress.classList.add('hidden');
+            // Re-enable scrolling after upload completes
+            document.body.classList.remove('no-scroll');
+          }, 1000);
+        }
+      }, 200);
+    }
+
+    // Guidelines character counter
+    guidelines.addEventListener('input', () => {
+      const count = guidelines.value.length;
+      charCount.textContent = `${count}/1000 characters`;
+      
+      if (count > 1000) {
+        charCount.classList.add('text-red-500');
+        charCount.classList.remove('text-gray-400');
+      } else {
+        charCount.classList.remove('text-red-500');
+        charCount.classList.add('text-gray-400');
+      }
+      
+      validateForm();
+    });
+
+    // Form validation - Only requires dataset files (not guidelines)
+    const nextBtn = document.getElementById('nextBtn');
+
+    function validateForm() {
+      const hasFiles = selectedFiles.length > 0;
+      
+      if (hasFiles) {
+        nextBtn.disabled = false;
+        nextBtn.classList.remove('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+      } else {
+        nextBtn.disabled = true;
+        nextBtn.classList.add('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+      }
+    }
+
+    // Next button click
+    nextBtn.addEventListener('click', (e) => {
+      if (nextBtn.disabled) {
+        e.preventDefault();
+        alert('Please upload dataset files to continue.');
+        return;
+      }
+      
+      // Save form data
+      localStorage.setItem('uploadedFiles', selectedFiles.length);
+      localStorage.setItem('annotationGuidelines', guidelines.value);
+      
+      // Navigate to team settings page
+      window.location.href = 'Team.html';
+    });
+
+    // Initialize page on load
+    window.addEventListener('load', () => {
+      initializePage();
+      validateForm();
+    });
+
+    // Enhanced mobile interactions
+    if ('ontouchstart' in window) {
+      uploadBox.addEventListener('touchstart', () => {
+        uploadBox.classList.add('upload-hover');
+      });
+      
+      uploadBox.addEventListener('touchend', () => {
+        setTimeout(() => {
+          uploadBox.classList.remove('upload-hover');
+        }, 150);
+      });
+    }
+  </script>
+</body>
+</html>

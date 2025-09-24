@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio Transcription Annotation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-sans">
+  <!-- Header -->
+  <header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="px-6 py-4 flex items-center justify-between">
+      <!-- Left side - File info -->
+      <div class="flex items-center space-x-4">
+        <div class="w-8 h-8 bg-black-500 rounded-lg flex items-center justify-center">
+          <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-semibold text-gray-900" id="fileName">Audio.mp3</h1>
+          <p class="text-sm text-gray-500">Audio Transcription Annotation</p>
+        </div>
+      </div>
+      
+      <!-- Right side - Actions -->
+      <div class="flex items-center space-x-3">
+        <a href="/frontend/Datasets.html" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center space-x-2" id="backBtn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          <span>Back to project</span>
+        </a>
+        <button class="px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 flex items-center space-x-2" id="saveBtn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          <span>Save Annotation</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="flex-1 grid grid-cols-1 xl:grid-cols-4 gap-0">
+    <!-- Left Panel - Audio Player (75% width on xl screens) -->
+    <div class="xl:col-span-3 p-6">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+        
+        <!-- Controls Row -->
+        <div class="p-6 pb-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <!-- File Upload -->
+            <div class="flex-shrink-0">
+              <label class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                </svg>
+                Select Audio File
+                <input type="file" accept="audio/*" class="hidden" id="fileInput">
+              </label>
+            </div>
+            <!-- Playback Controls -->
+            <div class="flex items-center space-x-3">
+              <button class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors disabled:opacity-50" id="playBtn" disabled>
+                <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20" id="playIcon">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+              <button class="px-3 py-2 text-sm font-medium text-gray-700 bg-black-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50" id="back10" disabled>
+                <span class="text-xs">-10s</span>
+              </button>
+              <button class="px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50" id="fwd10" disabled>
+                <span class="text-xs">+10s</span>
+              </button>
+            </div>
+            <!-- Time & Speed -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+              <div class="text-lg font-mono font-medium text-gray-900" id="timeDisplay">0:00 / 0:00</div>
+              <div class="flex items-center space-x-2">
+                <label class="text-sm font-medium text-gray-700">Speed</label>
+                <select class="text-sm border border-gray-300 rounded-lg px-3 py-1 bg-white" id="speedSelect">
+                  <option value="0.5">0.5x</option>
+                  <option value="0.75">0.75x</option>
+                  <option value="1" selected>1x</option>
+                  <option value="1.25">1.25x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2">2x</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Waveform Container -->
+        <div class="px-6 pb-6">
+          <div class="bg-gradient-to-r from-yellow-400 via-red-500 via-pink-500 via-purple-500 to-blue-500 rounded-2xl p-6 shadow-inner">
+            <div id="waveform" class="min-h-[160px] rounded-xl bg-black bg-opacity-10"></div>
+            <div class="flex justify-between items-center mt-4 text-white text-sm font-mono">
+              <span id="currentTime">00:00:000</span>
+              <span id="totalTime">/ 00:00:000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transcription Section -->
+        <div class="px-6 pb-6">
+          <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div class="flex items-center space-x-2 mb-3">
+              <div class="flex items-center justify-center bg-gray-100">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg"fill="currentColor"viewBox="0 0 32 32"class="w-8 h-8 text-black">
+                 <rect x="4" y="8" width="24" height="14" rx="2" fill="currentColor"/>
+                 <rect x="7" y="12" width="2" height="2" rx="0.5" fill="white"/>
+                 <rect x="11" y="12" width="2" height="2" rx="0.5" fill="white"/>
+                 <rect x="15" y="12" width="2" height="2" rx="0.5" fill="white"/>
+                 <rect x="19" y="12" width="2" height="2" rx="0.5" fill="white"/>
+                 <rect x="23" y="12" width="2" height="2" rx="0.5" fill="white"/>
+                 <rect x="7" y="16" width="18" height="2" rx="1" fill="white"/>
+                 <rect x="11" y="20" width="10" height="2" rx="1" fill="white"/>
+               </svg>
+              </div>
+              <h3 class="text-sm font-medium text-gray-900">Transcription</h3>
+            </div>
+            
+            <div class="bg-white border border-gray-300 rounded p-4 min-h-[100px] mb-3" id="transcriptionArea">
+              <div class="text-gray-500 text-sm" id="transcriptionPlaceholder">Click "Add Segment" to start transcribing...</div>
+              <div id="transcriptionSegments" class="space-y-2 hidden"></div>
+            </div>
+            
+            <div class="flex space-x-2">
+              <button class="px-3 py-1 text-sm border border-gray-300 rounded bg-white hover:bg-gray-50 flex items-center space-x-1" id="addSegmentBtn">
+                <span class="text-lg leading-none">+</span>
+                <span>Add Segment</span>
+              </button>
+              <button class="px-3 py-1 text-sm border border-blue-300 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 flex items-center space-x-1" id="autoSegmentBtn">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                </svg>
+                <span>Auto Segment</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel - Annotation Tools (25% width on xl screens) -->
+    <div class="xl:col-span-1 bg-gray-50 border-l border-gray-200">
+      <div class="p-4">
+        <!-- Panel Header -->
+       <div class="flex items-center space-x-2 mb-6">
+          <svg class="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+          </svg>
+          <h2 class="text-lg font-semibold text-gray-900">Annotation Tools</h2>
+        </div>
+
+        <!-- Transcription Controls -->
+        <div class="mb-4">
+          <h3 class="text-sm font-semibold text-gray-900 mb-3">Transcription Controls</h3>
+          
+          <!-- Current Segment -->
+          <div class="mb-3">
+            <label class="block text-sm font-semibold text-black-700 mb-1">Current Segment</label>
+            <div class="relative">
+              <textarea id="currentSegmentText" rows="4" class="w-full border border-gray-300 rounded px-2 py-1 pr-10 pb-6 text-xs bg-white focus:ring-1 focus:ring-blue-500 focus:border-transparent resize-none" placeholder="Type transcription here..."></textarea>
+              <!-- icon placed inside textarea (bottom-right) -->
+              <svg class="w-4 h-4 text-gray-400 absolute right-3 bottom-3 pointer-events-none" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Start Time -->
+          <div class="mb-3">
+            <label class="block text-sm font-semibold text-black-700 mb-1">Start Time</label>
+            <input type="text" id="startTime" class="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-white focus:ring-1 focus:ring-blue-500 focus:border-transparent" value="00:00.000" readonly>
+          </div>
+
+          <!-- End Time -->
+          <div class="mb-3">
+            <label class="block text-sm font-semibold text-black-700 mb-1">End Time</label>
+            <input type="text" id="endTime" class="w-full border border-gray-300 rounded px-2 py-1 text-xs bg-white focus:ring-1 focus:ring-blue-500 focus:border-transparent" value="00:00.000" readonly>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="space-y-2">
+            <button id="saveSegmentBtn" class="w-full  bg-purple-100 text-black-700 px-3 py-2 rounded text-xs font-medium hover:bg-purple-200 transition-colors flex items-center justify-center space-x-1 border border-green-900">
+              <!-- Save icon (floppy disk) as a small inline SVG -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3 text-black">
+                <rect width="20" height="20" x="2" y="2" rx="2" fill="currentColor"/>
+                <rect width="8" height="6" x="8" y="14" rx="1" fill="white"/>
+                <rect width="6" height="4" x="9" y="4" rx="1" fill="white"/>
+                <circle cx="13" cy="17" r="1" fill="black"/>
+              </svg>
+              <span class="text-sm font-semibold">Save Segment</span>
+            </button>
+            <button id="deleteSegmentBtn" class="w-full bg-gray-100 text-black-700 px-3 py-2 rounded text-xs font-medium hover:bg-gray-200 transition-colors flex items-center justify-center space-x-1 border border-red-800">
+              <!-- Delete icon (trash can) as a small inline SVG -->
+              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-6 h-6 text-black">
+               <rect x="6" y="9" width="12" height="11" rx="2" fill="currentColor"/>
+               <rect x="9" y="12" width="2" height="6" rx="1" fill="white"/>
+               <rect x="13" y="12" width="2" height="6" rx="1" fill="white"/>
+               <rect x="4" y="6" width="16" height="3" rx="1" fill="currentColor"/>
+              </svg>
+
+              <span class="text-sm font-semibold">Delete Segment</span>
+            </button>
+          </div>
+
+          <!-- Segments List -->
+          <!-- <div class="mt-4">
+            <h4 class="text-xs font-medium text-gray-900 mb-2">Segments</h4>
+            <div id="segmentsList" class="space-y-1 max-h-48 overflow-y-auto">
+              <! Segments will be added here -->
+            <!-- </div>  -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Modal -->
+  <div id="saveModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Transcription Saved</h3>
+      </div>
+      <div class="p-6">
+        <pre id="jsonOutput" class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-auto max-h-96 font-mono"></pre>
+      </div>
+      <div class="p-6 border-t border-gray-200 flex justify-end">
+        <button onclick="closeModal()" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let wavesurfer = null;
+    let currentAudioFile = null;
+    let segments = [];
+    let animationFrameId = null;
+    let currentSegment = null;
+    let segmentStartTime = 0;
+
+    // Utility functions
+    const formatTime = (seconds) => {
+      if (!seconds || !isFinite(seconds)) return "0:00";
+      const minutes = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    const formatTimeWithMs = (seconds) => {
+      if (!seconds || !isFinite(seconds)) return "00:00.000";
+      const minutes = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+      const ms = Math.floor((seconds % 1) * 1000).toString().padStart(3, '0');
+      return `${minutes}:${secs}.${ms}`;
+    };
+
+    // Initialize WaveSurfer
+    function initWaveSurfer() {
+      if (wavesurfer) {
+        wavesurfer.destroy();
+      }
+
+      wavesurfer = WaveSurfer.create({
+        container: '#waveform',
+        waveColor: 'rgba(255, 255, 255, 0.8)',
+        progressColor: 'rgba(255, 255, 255, 1)',
+        cursorColor: '#ffffff',
+        barWidth: 2,
+        barGap: 1,
+        height: 160,
+        normalize: true,
+        backend: 'WebAudio',
+        responsive: true,
+        fillParent: true,
+      });
+
+      // Event listeners
+      wavesurfer.on('ready', () => {
+        document.getElementById('playBtn').disabled = false;
+        document.getElementById('back10').disabled = false;
+        document.getElementById('fwd10').disabled = false;
+        
+        updateTimeDisplay();
+        startTimeLoop();
+      });
+
+      wavesurfer.on('finish', () => {
+        updatePlayButton(false);
+      });
+
+      return wavesurfer;
+    }
+
+    // Time update loop
+    function startTimeLoop() {
+      function update() {
+        if (wavesurfer) {
+          updateTimeDisplay();
+          updateSegmentTimes();
+          animationFrameId = requestAnimationFrame(update);
+        }
+      }
+      update();
+    }
+
+    function stopTimeLoop() {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
+
+    function updateTimeDisplay() {
+      if (!wavesurfer) return;
+      
+      const currentTime = wavesurfer.getCurrentTime() || 0;
+      const duration = wavesurfer.getDuration() || 0;
+      
+      document.getElementById('currentTime').textContent = formatTimeWithMs(currentTime);
+      document.getElementById('totalTime').textContent = `/ ${formatTimeWithMs(duration)}`;
+      document.getElementById('timeDisplay').textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+    }
+
+    function updateSegmentTimes() {
+      if (!wavesurfer || !currentSegment) return;
+      
+      const currentTime = wavesurfer.getCurrentTime() || 0;
+      document.getElementById('endTime').value = formatTimeWithMs(currentTime);
+    }
+
+    function updatePlayButton(isPlaying) {
+      const playIcon = document.getElementById('playIcon');
+      if (isPlaying) {
+        playIcon.innerHTML = '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>';
+      } else {
+        playIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>';
+      }
+    }
+
+    // Event listeners
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      document.getElementById('fileName').textContent = file.name;
+      
+      if (currentAudioFile) {
+        URL.revokeObjectURL(currentAudioFile);
+      }
+      
+      currentAudioFile = URL.createObjectURL(file);
+      initWaveSurfer();
+      
+      try {
+        await wavesurfer.load(currentAudioFile);
+      } catch (error) {
+        console.error('Error loading audio:', error);
+        alert('Error loading audio file. Please try a different format.');
+      }
+    });
+
+    document.getElementById('playBtn').addEventListener('click', () => {
+      if (!wavesurfer) return;
+      wavesurfer.playPause();
+      updatePlayButton(wavesurfer.isPlaying());
+    });
+
+    document.getElementById('back10').addEventListener('click', () => {
+      if (!wavesurfer) return;
+      const currentTime = wavesurfer.getCurrentTime();
+      wavesurfer.setTime(Math.max(0, currentTime - 10));
+    });
+
+    document.getElementById('fwd10').addEventListener('click', () => {
+      if (!wavesurfer) return;
+      const currentTime = wavesurfer.getCurrentTime();
+      const duration = wavesurfer.getDuration();
+      wavesurfer.setTime(Math.min(duration, currentTime + 10));
+    });
+
+    document.getElementById('speedSelect').addEventListener('change', (e) => {
+      if (!wavesurfer) return;
+      wavesurfer.setPlaybackRate(parseFloat(e.target.value));
+    });
+
+    // Transcription functions
+    document.getElementById('addSegmentBtn').addEventListener('click', () => {
+      if (!wavesurfer) {
+        alert('Please load an audio file first.');
+        return;
+      }
+
+      if (currentSegment) {
+        alert('Please save or cancel the current segment first.');
+        return;
+      }
+
+      const currentTime = wavesurfer.getCurrentTime() || 0;
+      segmentStartTime = currentTime;
+      currentSegment = {
+        id: Date.now(),
+        start: currentTime,
+        end: currentTime,
+        text: ''
+      };
+
+      document.getElementById('startTime').value = formatTimeWithMs(currentTime);
+      document.getElementById('endTime').value = formatTimeWithMs(currentTime);
+      document.getElementById('currentSegmentText').value = '';
+      document.getElementById('currentSegmentText').focus();
+      
+      // Show transcription area
+      document.getElementById('transcriptionPlaceholder').classList.add('hidden');
+      document.getElementById('transcriptionSegments').classList.remove('hidden');
+    });
+
+    document.getElementById('autoSegmentBtn').addEventListener('click', () => {
+      alert('Auto segmentation feature would be implemented here with AI/ML integration.');
+    });
+
+    document.getElementById('saveSegmentBtn').addEventListener('click', () => {
+      if (!currentSegment) {
+        alert('No active segment to save.');
+        return;
+      }
+
+      const text = document.getElementById('currentSegmentText').value.trim();
+      if (!text) {
+        alert('Please enter transcription text before saving.');
+        return;
+      }
+
+      const currentTime = wavesurfer?.getCurrentTime() || 0;
+      currentSegment.end = currentTime;
+      currentSegment.text = text;
+
+      addSegment(currentSegment);
+      clearCurrentSegment();
+    });
+
+    document.getElementById('deleteSegmentBtn').addEventListener('click', () => {
+      if (!currentSegment) {
+        alert('No active segment to delete.');
+        return;
+      }
+      clearCurrentSegment();
+    });
+
+    function addSegment(segment) {
+      segments.push(segment);
+      
+      // Add to transcription area
+      const transcriptionSegments = document.getElementById('transcriptionSegments');
+      const segmentDiv = document.createElement('div');
+      segmentDiv.className = 'text-sm text-gray-800 p-2 bg-gray-50 rounded border-l-2 border-blue-400';
+      segmentDiv.innerHTML = `
+        <div class="text-xs text-gray-500 mb-1">${formatTimeWithMs(segment.start)} - ${formatTimeWithMs(segment.end)}</div>
+        <div>${segment.text}</div>
+      `;
+      transcriptionSegments.appendChild(segmentDiv);
+
+      // Add to segments list
+      updateSegmentsList();
+    }
+
+    function updateSegmentsList() {
+      const segmentsList = document.getElementById('segmentsList');
+      segmentsList.innerHTML = '';
+      
+      segments.forEach((segment, index) => {
+        const segmentElement = document.createElement('div');
+        segmentElement.className = 'bg-white border border-gray-200 rounded p-2 text-xs';
+        segmentElement.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <div class="font-medium text-gray-900">Segment ${index + 1}</div>
+              <div class="text-gray-500 mt-1">${formatTimeWithMs(segment.start)} - ${formatTimeWithMs(segment.end)}</div>
+              <div class="text-gray-700 mt-1 truncate">${segment.text.substring(0, 30)}${segment.text.length > 30 ? '...' : ''}</div>
+            </div>
+            <div class="flex space-x-1 ml-2">
+              <button onclick="jumpToSegment(${segment.start})" class="text-xs px-1 py-0.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-700">
+                Go
+              </button>
+              <button onclick="deleteSegmentFromList(${segment.id})" class="text-xs px-1 py-0.5 bg-red-100 hover:bg-red-200 rounded text-red-700">
+                ×
+              </button>
+            </div>
+          </div>
+        `;
+        segmentsList.appendChild(segmentElement);
+      });
+    }
+
+    function clearCurrentSegment() {
+      currentSegment = null;
+      document.getElementById('currentSegmentText').value = '';
+      document.getElementById('startTime').value = '00:00.000';
+      document.getElementById('endTime').value = '00:00.000';
+    }
+
+    function jumpToSegment(time) {
+      if (wavesurfer) {
+        wavesurfer.setTime(time);
+      }
+    }
+
+    function deleteSegmentFromList(segmentId) {
+      segments = segments.filter(s => s.id !== segmentId);
+      
+      // Rebuild transcription area
+      const transcriptionSegments = document.getElementById('transcriptionSegments');
+      transcriptionSegments.innerHTML = '';
+      
+      segments.forEach(segment => {
+        const segmentDiv = document.createElement('div');
+        segmentDiv.className = 'text-sm text-gray-800 p-2 bg-gray-50 rounded border-l-2 border-blue-400';
+        segmentDiv.innerHTML = `
+          <div class="text-xs text-gray-500 mb-1">${formatTimeWithMs(segment.start)} - ${formatTimeWithMs(segment.end)}</div>
+          <div>${segment.text}</div>
+        `;
+        transcriptionSegments.appendChild(segmentDiv);
+      });
+
+      if (segments.length === 0) {
+        document.getElementById('transcriptionPlaceholder').classList.remove('hidden');
+        document.getElementById('transcriptionSegments').classList.add('hidden');
+      }
+
+      updateSegmentsList();
+    }
+
+    // Save transcription
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const fileName = document.getElementById('fileName').textContent || 'Audio.mp3';
+      const transcription = {
+        fileName: fileName,
+        duration: wavesurfer?.getDuration() || 0,
+        segments: segments,
+        fullTranscription: segments.map(s => s.text).join(' '),
+        createdAt: new Date().toISOString()
+      };
+
+      const jsonString = JSON.stringify(transcription, null, 2);
+      
+      document.getElementById('jsonOutput').textContent = jsonString;
+      document.getElementById('saveModal').classList.remove('hidden');
+      
+      // Download file
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName.replace(/\.[^/.]+$/, '') + '_transcription.json';
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+  </script>
+</body>
+</html>

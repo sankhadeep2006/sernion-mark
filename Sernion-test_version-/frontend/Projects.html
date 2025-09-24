@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Projects</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .active-sidebar {
+      color: black !important;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen text-gray-900">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="w-64 bg-white shadow-sm p-6 flex flex-col">
+      <nav>
+        <ul class="space-y-6 mt-12" id="sidebarMenu">
+          <li data-id="dashboard" class="flex items-center sidebar-item text-gray-600 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+            </svg>
+            <a href="Dashboard.html">Dashboard</a>
+          </li>
+          <li data-id="projects" class="flex items-center sidebar-item active-sidebar cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7z"/>
+              <path d="M4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
+            </svg>
+            Projects
+          </li>
+          <li data-id="datasets" class="flex items-center sidebar-item text-gray-600 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+            </svg>
+            <a href="Datasets.html">Datasets</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <!-- Main content -->
+    <main class="flex-1 px-12 py-10 flex flex-col">
+      <div class="flex justify-between items-center">
+        <h1 id="pageTitle" class="text-3xl font-semibold">Projects</h1>
+        <div class="flex items-center gap-5">
+          <button id="newProjectBtn" class="bg-black text-white py-2 px-5 rounded hover:bg-gray-700">+ New Project</button>
+          <!-- Profile -->
+          <div class="relative">
+            <button id="profileBtn" class="flex items-center focus:outline-none">
+              <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+            </button>
+            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+              <div class="p-4 flex items-center gap-3 border-b">
+                <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="font-semibold text-base" id="userName">User</div>
+                  <div class="text-sm text-gray-500" id="userEmail">user@example.com</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter and View Buttons -->
+      <div class="flex items-center mt-8 mb-6 gap-6">
+        <div class="flex gap-2">
+          <button id="filter-all" class="px-4 py-1 rounded bg-gray-300 font-semibold">All</button>
+          <button id="filter-recent" class="px-4 py-1 rounded bg-gray-200 font-medium">Recent</button>
+          <button id="filter-completed" class="px-4 py-1 rounded bg-gray-200 font-medium">Completed</button>
+        </div>
+        <div class="ml-auto flex items-center gap-2">
+          
+          <button id="gridViewBtn" class="text-black bg-gray-200 px-2 py-1 rounded">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <rect x="3" y="3" width="7" height="7"/>
+              <rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+              <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+          </button>
+          <button id="listViewBtn" class="text-gray-400 bg-gray-200 px-2 py-1 rounded">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <rect x="3" y="4" width="18" height="4"/>
+              <rect x="3" y="10" width="18" height="4"/>
+              <rect x="3" y="16" width="18" height="4"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Projects container -->
+      <div id="projectsContainer" class="grid grid-cols-3 gap-6 flex-1 overflow-auto"></div>
+    </main>
+  </div>
+
+  <!-- Import Project Modal -->
+  <div id="importModal" class="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50 hidden">
+    <div class="bg-white border border-gray-300 rounded-xl shadow p-6 w-[320px]">
+      <div class="mb-5 text-lg font-semibold">Project Actions</div>
+      <button id="editProjectBtn" class="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100">Edit Project</button>
+      <button id="renameProjectBtn" class="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100">Rename Project</button>
+      <button id="deleteProjectBtn" class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50">Delete Project</button>
+      <button id="closeModalBtn" class="mt-5 block mx-auto bg-gray-200 hover:bg-gray-300 px-5 py-1 rounded text-gray-700">Close</button>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // Sidebar highlighting
+    document.querySelectorAll("#sidebarMenu .sidebar-item").forEach(item =>
+      item.addEventListener("click", function(e){
+        document.querySelectorAll("#sidebarMenu .sidebar-item").forEach(i=>i.classList.remove("active-sidebar"));
+        this.classList.add("active-sidebar");
+        if(this.dataset.id === "projects"){
+          document.getElementById("pageTitle").textContent = "Projects";
+        }
+      })
+    );
+    document.querySelector('[data-id="projects"]').classList.add("active-sidebar");
+    document.getElementById("pageTitle").textContent = "Projects";
+
+    // Profile dropdown
+    const profileBtn=document.getElementById("profileBtn");
+    const profileDropdown=document.getElementById("profileDropdown");
+    profileBtn.onclick=(e)=>{
+      e.stopPropagation();
+      profileDropdown.classList.toggle("hidden");
+    };
+    document.body.addEventListener("click", ()=>profileDropdown.classList.add("hidden"));
+
+    // State
+    let projectsState = [];
+    let currentView = "grid";
+    let currentFilter = "all";
+
+    function projectMatchesFilter(p) {
+      if (currentFilter === 'completed') return (p.annotated_count || 0) >= (p.item_count || 0) && (p.item_count || 0) > 0;
+      if (currentFilter === 'recent') return true; // backend already returns ordered
+      return true;
+    }
+
+    function renderProjects() {
+      const container = document.getElementById("projectsContainer");
+      container.className = currentView === 'grid' ? "grid grid-cols-3 gap-6 flex-1 overflow-auto" : "flex flex-col gap-4 flex-1 overflow-auto";
+      const filtered = projectsState.filter(projectMatchesFilter);
+      container.innerHTML = filtered.map((p,i)=>`
+        <div class="relative bg-white border border-gray-300 rounded-xl flex flex-col justify-between p-6 min-h-[135px]">
+          <div>
+            <div class="font-semibold mb-2">${p.name}</div>
+            <div class="text-sm mb-1">Items: ${p.item_count} | Annotated: ${p.annotated_count}</div>
+            <div class="text-sm">${p.description || ''}</div>
+          </div>
+          <button class="absolute top-5 right-5 text-xl text-gray-700 hover:text-black focus:outline-none" onclick="showDropdown(event,${i})">&#8942;</button>
+          <div id="dropdown-${i}" class="hidden absolute right-6 top-12 bg-white border border-gray-300 rounded shadow min-w-[150px] z-30">
+            <button class="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100" onclick="editProject(${i})">Edit Project</button>
+            <button class="block w-full px-4 py-2 text-left text-sm hover:bg-gray-100" onclick="renameProject(${i})">Rename Project</button>
+            <button class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50" onclick="deleteProject(${i})">Delete Project</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.showDropdown = function (e, idx) {
+      e.stopPropagation();
+      document.querySelectorAll("[id^='dropdown-']").forEach(el => el.classList.add("hidden"));
+      document.getElementById(`dropdown-${idx}`).classList.remove("hidden");
+    };
+
+    async function loadProjects() {
+      try {
+        const resp = await api.getProjects();
+        projectsState = resp.results || [];
+        renderProjects();
+      } catch (e) {
+        console.error('Failed to load projects', e);
+      }
+    }
+
+    async function createProjectFlow() {
+      const name = prompt('Project name');
+      if (!name) return;
+      const description = prompt('Description (optional)') || '';
+      try {
+        await api.createProject({ name, description, labels: [] });
+        await loadProjects();
+      } catch (e) {
+        alert('Failed to create project');
+      }
+    }
+
+    window.renameProject = async function(idx) {
+      const p = projectsState[idx];
+      const name = prompt('New name', p.name);
+      if (!name) return;
+      try {
+        await api.updateProject(p.id, { name });
+        await loadProjects();
+      } catch (e) { alert('Rename failed'); }
+    };
+
+    window.editProject = async function(idx) {
+      const p = projectsState[idx];
+      const description = prompt('Update description', p.description || '');
+      if (description === null) return;
+      try {
+        await api.updateProject(p.id, { description });
+        await loadProjects();
+      } catch (e) { alert('Update failed'); }
+    };
+
+    window.deleteProject = async function(idx) {
+      const p = projectsState[idx];
+      if (!confirm(`Delete project "${p.name}"?`)) return;
+      try {
+        await api.deleteProject(p.id);
+        await loadProjects();
+      } catch (e) { alert('Delete failed'); }
+    };
+
+    document.getElementById("filter-all").onclick = function() {
+      currentFilter = "all"; updateFilters("filter-all"); renderProjects(); };
+    document.getElementById("filter-recent").onclick = function() {
+      currentFilter = "recent"; updateFilters("filter-recent"); renderProjects(); };
+    document.getElementById("filter-completed").onclick = function() {
+      currentFilter = "completed"; updateFilters("filter-completed"); renderProjects(); };
+
+    function updateFilters(activeId) {
+      ["filter-all","filter-recent","filter-completed"].forEach(id=>{
+        let btn = document.getElementById(id);
+        btn.classList.remove("bg-gray-300","font-semibold");
+        btn.classList.add("bg-gray-200","font-medium");
+      });
+      let activeBtn = document.getElementById(activeId);
+      activeBtn.classList.remove("bg-gray-200","font-medium");
+      activeBtn.classList.add("bg-gray-300","font-semibold");
+    }
+
+    document.getElementById("gridViewBtn").onclick = function(){
+      currentView = "grid";
+      this.classList.replace("text-gray-400","text-black");
+      document.getElementById("listViewBtn").classList.replace("text-black","text-gray-400");
+      renderProjects();
+    };
+    document.getElementById("listViewBtn").onclick = function(){
+      currentView = "list";
+      this.classList.replace("text-gray-400","text-black");
+      document.getElementById("gridViewBtn").classList.replace("text-black","text-gray-400");
+      renderProjects();
+    };
+
+    document.getElementById('newProjectBtn').addEventListener('click', createProjectFlow);
+
+    // Init
+    (async () => {
+      const user = api.getCurrentUser();
+      if (user) {
+        document.getElementById('userName').textContent = user.full_name || user.username;
+        document.getElementById('userEmail').textContent = user.email || '';
+      }
+      updateFilters("filter-all");
+      await loadProjects();
+    })();
+  </script>
+</body>
+</html>
